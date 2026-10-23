@@ -125,3 +125,69 @@ func TestGetImportedByCounts(t *testing.T) {
 	}
 }
 
+func TestGetImporterRank(t *testing.T) {
+	ctx := t.Context()
+	fds := New()
+
+	// Target packages A, B, C, D are in m1.com.
+	m1 := sample.Module("m1.com", "v1.0.0", "pkgA", "pkgB", "pkgC", "pkgD")
+	fds.MustInsertModule(t, m1)
+
+	// m2 imports pkgA, pkgB, pkgC.
+	m2 := sample.Module("m2.com", "v1.0.0", "p1")
+	m2.Packages()[0].Imports = []string{"m1.com/pkgA", "m1.com/pkgB", "m1.com/pkgC"}
+	fds.MustInsertModule(t, m2)
+
+	// m3 imports pkgA, pkgB, pkgC.
+	m3 := sample.Module("m3.com", "v1.0.0", "p1")
+	m3.Packages()[0].Imports = []string{"m1.com/pkgA", "m1.com/pkgB", "m1.com/pkgC"}
+	fds.MustInsertModule(t, m3)
+
+	// m4 imports pkgA.
+	m4 := sample.Module("m4.com", "v1.0.0", "p1")
+	m4.Packages()[0].Imports = []string{"m1.com/pkgA"}
+	fds.MustInsertModule(t, m4)
+
+	// pkgA: imported by m2, m3, m4 -> 3 modules
+	// pkgB: imported by m2, m3 -> 2 modules
+	// pkgC: imported by m2, m3 -> 2 modules (tied with B)
+	// pkgD: imported by none -> 0 modules
+	// Ranks among packages:
+	// pkgA: 1 (0 higher)
+	// pkgB: 2 (1 higher: pkgA)
+	// pkgC: 2 (1 higher: pkgA)
+	// pkgD: 4 (3 higher: pkgA, pkgB, pkgC)
+
+	tests := []struct {
+		pkgPath  string
+		wantRank int
+	}{
+		{"m1.com/pkgA", 1},
+		{"m1.com/pkgB", 2},
+		{"m1.com/pkgC", 2},
+		{"m1.com/pkgD", 4},
+		{"nonexistent", 0},
+	}
+	for _, tc := range tests {
+		got, err := fds.GetImporterRank(ctx, tc.pkgPath)
+		if err != nil {
+			t.Errorf("GetImporterRank(ctx, %q): %v", tc.pkgPath, err)
+			continue
+		}
+		if got != tc.wantRank {
+			t.Errorf("GetImporterRank(ctx, %q) = %d, want %d", tc.pkgPath, got, tc.wantRank)
+		}
+	}
+
+	// An uncomputed package (NumImportedByModules < 0) returns 0.
+	mUncomputed := sample.Module("uncomputed.com", "v1.0.0", "pkg")
+	mUncomputed.Packages()[0].NumImportedByModules = -1
+	fds.MustInsertModule(t, mUncomputed)
+	got, err := fds.GetImporterRank(ctx, "uncomputed.com/pkg")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != 0 {
+		t.Errorf("GetImporterRank(uncomputed) = %d, want 0", got)
+	}
+}

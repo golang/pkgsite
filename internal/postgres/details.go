@@ -133,6 +133,37 @@ func (db *DB) GetImportedByCounts(ctx context.Context, pkgPath, modulePath strin
 	}
 }
 
+// GetImporterRank returns the 1-based rank of pkgPath by module importer count,
+// or 0 if the count is unknown.
+func (db *DB) GetImporterRank(ctx context.Context, pkgPath string) (rank int, err error) {
+	defer derrors.WrapStack(&err, "GetImporterRank(ctx, %q)", pkgPath)
+	defer stats.Elapsed(ctx, "GetImporterRank")()
+
+	if pkgPath == "" {
+		return 0, fmt.Errorf("pkgPath cannot be empty: %w", derrors.InvalidArgument)
+	}
+	query := `
+		SELECT (
+			SELECT count(*) + 1
+			FROM search_documents
+			WHERE imported_by_module_count > sd.imported_by_module_count
+			AND imported_by_module_count_updated_at IS NOT NULL
+		)
+		FROM search_documents sd
+		WHERE sd.package_path = $1
+		AND sd.imported_by_module_count_updated_at IS NOT NULL
+	`
+	err = db.db.QueryRow(ctx, query, pkgPath).Scan(&rank)
+	switch err {
+	case sql.ErrNoRows:
+		return 0, nil
+	case nil:
+		return rank, nil
+	default:
+		return 0, err
+	}
+}
+
 // GetModuleInfo fetches a module version from the database with the primary key
 // (module_path, version).
 func (db *DB) GetModuleInfo(ctx context.Context, modulePath, resolvedVersion string) (_ *internal.ModuleInfo, err error) {

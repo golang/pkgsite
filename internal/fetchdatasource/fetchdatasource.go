@@ -471,3 +471,8 @@ func (ds *FetchDataSource) GetImportedBy(ctx context.Context, pkgPath, modulePat
 func (ds *FetchDataSource) GetImportedByCounts(ctx context.Context, pkgPath, modulePath string) (internal.ImportedByCounts, error) {
 	return internal.ImportedByCounts{}, nil
 }
+
+// GetImporterRank is not implemented.
+func (ds *FetchDataSource) GetImporterRank(ctx context.Context, pkgPath string) (int, error) {
+	return 0, nil
+}

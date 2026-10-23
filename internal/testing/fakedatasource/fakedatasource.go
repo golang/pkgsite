@@ -461,6 +461,56 @@ func (ds *FakeDataSource) GetImportedByCounts(ctx context.Context, pkgPath, modu
 	}, nil
 }
 
+// GetImporterRank returns the 1-based rank of pkgPath among all packages
+// ordered by imported-by module count descending, or 0 if the count is unknown.
+func (ds *FakeDataSource) GetImporterRank(ctx context.Context, pkgPath string) (int, error) {
+	var targetUnit *internal.Unit
+	var targetMod *internal.Module
+	for _, m := range ds.modules {
+		if ds.getLatestModule(m.ModulePath) != m {
+			continue
+		}
+		for _, u := range m.Units {
+			if u.Path == pkgPath {
+				targetUnit = u
+				targetMod = m
+				break
+			}
+		}
+		if targetUnit != nil {
+			break
+		}
+	}
+	if targetUnit == nil || !targetUnit.IsPackage() || targetUnit.NumImportedByModules < 0 {
+		return 0, nil
+	}
+
+	targetCounts, err := ds.GetImportedByCounts(ctx, pkgPath, targetMod.ModulePath)
+	if err != nil {
+		return 0, err
+	}
+
+	higher := 0
+	for _, m := range ds.modules {
+		if ds.getLatestModule(m.ModulePath) != m {
+			continue
+		}
+		for _, u := range m.Units {
+			if !u.IsPackage() || u.NumImportedByModules < 0 {
+				continue
+			}
+			counts, err := ds.GetImportedByCounts(ctx, u.Path, m.ModulePath)
+			if err != nil {
+				return 0, err
+			}
+			if counts.Modules > targetCounts.Modules {
+				higher++
+			}
+		}
+	}
+	return higher + 1, nil
+}
+
 func (ds *FakeDataSource) GetLatestMajorPathForV1Path(ctx context.Context, v1path string) (string, int, error) {
 	return "", 0, errNotImplemented
 }

@@ -62,6 +62,11 @@ func TestFetchEvalsDetails(t *testing.T) {
 					Score: 1,
 					Value: "10%",
 				},
+				{
+					Type:  importerRankEval,
+					Score: 0,
+					Value: "no importers",
+				},
 			},
 		},
 		{
@@ -84,6 +89,11 @@ func TestFetchEvalsDetails(t *testing.T) {
 					Type:  docCoverageEval,
 					Score: 1,
 					Value: "10%",
+				},
+				{
+					Type:  importerRankEval,
+					Score: 0,
+					Value: "no importers",
 				},
 			},
 		},
@@ -108,6 +118,11 @@ func TestFetchEvalsDetails(t *testing.T) {
 					Score: 1,
 					Value: "10%",
 				},
+				{
+					Type:  importerRankEval,
+					Score: 0,
+					Value: "no importers",
+				},
 			},
 		},
 		{
@@ -130,6 +145,11 @@ func TestFetchEvalsDetails(t *testing.T) {
 					Type:  docCoverageEval,
 					Score: 1,
 					Value: "10%",
+				},
+				{
+					Type:  importerRankEval,
+					Score: 0,
+					Value: "no importers",
 				},
 			},
 		},
@@ -158,6 +178,11 @@ func Bar() {}
 					Type:  docCoverageEval,
 					Score: 0,
 					Value: "no comments",
+				},
+				{
+					Type:  importerRankEval,
+					Score: 0,
+					Value: "no importers",
 				},
 			},
 		},
@@ -192,6 +217,11 @@ func Baz() {}
 					Score: 3,
 					Value: "55%",
 				},
+				{
+					Type:  importerRankEval,
+					Score: 0,
+					Value: "no importers",
+				},
 			},
 		},
 	}
@@ -225,6 +255,7 @@ func Baz() {}
 
 			um := &internal.UnitMeta{
 				Path:       sample.ModulePath + "/" + sample.Suffix,
+				Name:       sample.Suffix,
 				ModuleInfo: mod.ModuleInfo,
 			}
 
@@ -236,6 +267,97 @@ func Baz() {}
 				t.Errorf("fetchEvalsDetails() mismatch (-want +got):\n%s", diff)
 			}
 		})
+	}
+}
+
+func TestComputeImporterRank(t *testing.T) {
+	ctx := t.Context()
+	fds := fakedatasource.New()
+
+	// Module m.com has packages a, b and c.
+	// a is imported by two modules, b by one, and c by none.
+	mod := sample.Module("m.com", sample.VersionString, "a", "b", "c")
+	fds.MustInsertModule(t, mod)
+	imp1 := sample.Module("imp1.com", sample.VersionString, "p")
+	imp1.Packages()[0].Imports = []string{"m.com/a", "m.com/b"}
+	fds.MustInsertModule(t, imp1)
+	imp2 := sample.Module("imp2.com", sample.VersionString, "p")
+	imp2.Packages()[0].Imports = []string{"m.com/a"}
+	fds.MustInsertModule(t, imp2)
+
+	unitMeta := func(path, name string) *internal.UnitMeta {
+		return &internal.UnitMeta{Path: path, Name: name, ModuleInfo: mod.ModuleInfo}
+	}
+
+	for _, test := range []struct {
+		name           string
+		ds             internal.DataSource
+		um             *internal.UnitMeta
+		wantNumModules int
+		wantRank       int
+	}{
+		{"most imported", fds, unitMeta("m.com/a", "a"), 2, 1},
+		{"less imported", fds, unitMeta("m.com/b", "b"), 1, 2},
+		{"no importers", fds, unitMeta("m.com/c", "c"), 0, 0},
+		{"not a package", fds, unitMeta("m.com", ""), -1, 0},
+		{"unknown count", unknownCountsDataSource{fds}, unitMeta("m.com/a", "a"), -1, 0},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			gotNumModules, gotRank, err := computeImporterRank(ctx, test.ds, test.um)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if gotNumModules != test.wantNumModules || gotRank != test.wantRank {
+				t.Errorf("got (%d, %d), want (%d, %d)",
+					gotNumModules, gotRank, test.wantNumModules, test.wantRank)
+			}
+		})
+	}
+}
+
+// unknownCountsDataSource is a DataSource whose imported-by counts
+// have never been computed.
+type unknownCountsDataSource struct {
+	internal.DataSource
+}
+
+func (unknownCountsDataSource) GetImportedByCounts(context.Context, string, string) (internal.ImportedByCounts, error) {
+	return internal.ImportedByCounts{}, nil
+}
+
+func TestEvalImporterRank(t *testing.T) {
+	tests := []struct {
+		numModules int
+		rank       int
+		wantScore  int
+		wantValue  string
+	}{
+		{-1, 0, 0, "unknown"},
+		{-1, 5, 0, "unknown"},
+		{0, 0, 0, "no importers"},
+		{3, 0, 0, "unknown"},
+		{3, -1, 0, "unknown"},
+		{3, 1, 5, "1"},
+		{3, 100, 5, "100"},
+		{3, 101, 4, "101"},
+		{3, 1000, 4, "1,000"},
+		{3, 1001, 3, "1,001"},
+		{3, 10000, 3, "10,000"},
+		{3, 10001, 2, "10,001"},
+		{3, 100000, 2, "100,000"},
+		{3, 100001, 1, "100,001"},
+		{3, 250000, 1, "250,000"},
+	}
+	for _, tc := range tests {
+		got := evalImporterRank(tc.numModules, tc.rank)
+		want := eval{
+			Type:  importerRankEval,
+			Score: tc.wantScore,
+			Value: tc.wantValue,
+		}
+		if diff := cmp.Diff(want, got, cmp.AllowUnexported(eval{}, evalType{})); diff != "" {
+			t.Errorf("evalImporterRank(%d, %d) mismatch (-want +got):\n%s", tc.numModules, tc.rank, diff)
+		}
 	}
 }
 

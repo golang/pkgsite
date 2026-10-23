@@ -139,6 +139,9 @@ type DataSource interface {
 	GetImportedBy(ctx context.Context, pkgPath, modulePath string, start string, limit int) ([]string, error)
 	// GetImportedByCounts returns the counts of packages and modules that import the given package.
 	GetImportedByCounts(ctx context.Context, pkgPath, modulePath string) (ImportedByCounts, error)
+	// GetImporterRank returns the 1-based rank of pkgPath by module importer count,
+	// or 0 if the count is unknown.
+	GetImporterRank(ctx context.Context, pkgPath string) (int, error)
 
 	// SearchSupport reports the search types supported by this datasource.
 	SearchSupport() SearchSupport

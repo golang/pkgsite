@@ -393,3 +393,89 @@ func TestGetImportedByPagination(t *testing.T) {
 		t.Errorf("page 3 mismatch (-want +got):\n%s", diff)
 	}
 }
+
+func TestGetImporterRank(t *testing.T) {
+	t.Parallel()
+	testDB, release := acquire(t)
+	defer release()
+	ctx := t.Context()
+
+	// Nonexistent package returns 0.
+	got, err := testDB.GetImporterRank(ctx, "nonexistent/pkg")
+	if err != nil {
+		t.Fatalf("GetImporterRank(ctx, nonexistent): %v", err)
+	}
+	if got != 0 {
+		t.Errorf("GetImporterRank(ctx, nonexistent) = %d, want 0", got)
+	}
+
+	// Empty package path returns InvalidArgument error.
+	if _, err := testDB.GetImporterRank(ctx, ""); !errors.Is(err, derrors.InvalidArgument) {
+		t.Errorf("GetImporterRank(ctx, \"\") error = %v, want InvalidArgument", err)
+	}
+
+	// Insert modules and set up imported_by_module_count values.
+	mUnupdated := sample.Module("unupdated.org/mod", "v1.0.0", "pkg")
+	m0 := sample.Module("ranked.org/a", "v1.0.0", "pkgA")
+	m1 := sample.Module("ranked.org/b", "v1.0.0", "pkgB")
+	m2 := sample.Module("ranked.org/c", "v1.0.0", "pkgC")
+	m3 := sample.Module("ranked.org/d", "v1.0.0", "pkgD")
+	for _, m := range []*internal.Module{mUnupdated, m0, m1, m2, m3} {
+		testDB.MustInsertModule(t, m)
+	}
+
+	// Clear updated_at on unupdated.org/mod/pkg since MustInsertModule computes counts.
+	if _, err := testDB.db.Exec(ctx, `
+		UPDATE search_documents
+		SET imported_by_module_count_updated_at = NULL
+		WHERE package_path = 'unupdated.org/mod/pkg'`); err != nil {
+		t.Fatal(err)
+	}
+
+	// Update imported_by_module_count and updated_at directly in search_documents.
+	// A: 50 -> Rank 1 (0 higher)
+	// B: 20 -> Rank 2 (1 higher: A)
+	// C: 20 -> Rank 2 (1 higher: A, tie with B)
+	// D: 5  -> Rank 4 (3 higher: A, B, C)
+	updates := []struct {
+		pkgPath string
+		count   int
+	}{
+		{"ranked.org/a/pkgA", 50},
+		{"ranked.org/b/pkgB", 20},
+		{"ranked.org/c/pkgC", 20},
+		{"ranked.org/d/pkgD", 5},
+	}
+	for _, u := range updates {
+		_, err := testDB.db.Exec(ctx, `
+			UPDATE search_documents
+			SET imported_by_module_count = $1,
+			    imported_by_module_count_updated_at = CURRENT_TIMESTAMP
+			WHERE package_path = $2`, u.count, u.pkgPath)
+		if err != nil {
+			t.Fatalf("UPDATE search_documents for %q: %v", u.pkgPath, err)
+		}
+	}
+
+	tests := []struct {
+		pkgPath  string
+		wantRank int
+	}{
+		{"ranked.org/a/pkgA", 1},
+		{"ranked.org/b/pkgB", 2},
+		{"ranked.org/c/pkgC", 2},
+		{"ranked.org/d/pkgD", 4},
+		{"unupdated.org/mod/pkg", 0},
+		{"nonexistent.org/pkg", 0},
+	}
+	for _, tc := range tests {
+		got, err := testDB.GetImporterRank(ctx, tc.pkgPath)
+		if err != nil {
+			t.Errorf("GetImporterRank(ctx, %q): %v", tc.pkgPath, err)
+			continue
+		}
+		if got != tc.wantRank {
+			t.Errorf("GetImporterRank(ctx, %q) = %d, want %d", tc.pkgPath, got, tc.wantRank)
+		}
+	}
+}

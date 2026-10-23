@@ -23,6 +23,8 @@ import (
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
 	"golang.org/x/pkgsite/internal/version"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
 
 type evalType struct {
@@ -61,6 +63,18 @@ symbols that are commented. The format of the comments doesn't matter.
 3: 41% - 60%
 4: 61% - 80%
 5: 81% - 100%`,
+		MaxScore: 5,
+	}
+
+	importerRankEval = &evalType{
+		Label: "Importer rank",
+		Description: `Rank of this package by number of importing modules.
+0: no importing modules, or unknown imported-by module count
+1: rank > 100,000
+2: top 100,000
+3: top 10,000
+4: top 1,000
+5: top 100`,
 		MaxScore: 5,
 	}
 )
@@ -121,9 +135,69 @@ func fetchEvalsDetails(ctx context.Context, ds internal.DataSource, um *internal
 	}
 	docEval := evalDocCoverage(summarizeDocumentation(docPkg))
 
+	numModules, rank, err := computeImporterRank(ctx, ds, um)
+	if err != nil {
+		return nil, err
+	}
+	impEval := evalImporterRank(numModules, rank)
+
 	return &evalsDetails{
-		Evals: []eval{licEval, modEval, docEval},
+		Evals: []eval{licEval, modEval, docEval, impEval},
 	}, nil
+}
+
+// computeImporterRank returns the number of modules that import the package
+// described by um, and its 1-based rank among all packages by that number.
+// numModules is -1 if the count is unknown, including when um is not a package.
+// rank is 0 if it is unknown or wasn't computed.
+func computeImporterRank(ctx context.Context, ds internal.DataSource, um *internal.UnitMeta) (numModules, rank int, err error) {
+	if !um.IsPackage() {
+		return -1, 0, nil
+	}
+	counts, err := ds.GetImportedByCounts(ctx, um.Path, um.ModulePath)
+	if err != nil {
+		return 0, 0, err
+	}
+	if counts.ModulesUpdatedAt.IsZero() {
+		return -1, 0, nil
+	}
+	// Packages with no importers all tie for last place, so don't
+	// bother computing their rank.
+	if counts.Modules == 0 {
+		return 0, 0, nil
+	}
+	rank, err = ds.GetImporterRank(ctx, um.Path)
+	if err != nil {
+		return 0, 0, err
+	}
+	return counts.Modules, rank, nil
+}
+
+// evalImporterRank converts an importer rank into an evaluation.
+// numModules is the number of modules that import the package, or -1 if
+// unknown. rank is the package's 1-based importer rank, or 0 if unknown.
+func evalImporterRank(numModules, rank int) eval {
+	e := eval{Type: importerRankEval}
+	switch {
+	case numModules == 0:
+		e.Value = "no importers"
+		return e
+	case numModules < 0 || rank <= 0:
+		e.Value = "unknown"
+		return e
+	case rank <= 100:
+		e.Score = 5
+	case rank <= 1_000:
+		e.Score = 4
+	case rank <= 10_000:
+		e.Score = 3
+	case rank <= 100_000:
+		e.Score = 2
+	default:
+		e.Score = 1
+	}
+	e.Value = message.NewPrinter(language.English).Sprint(rank)
+	return e
 }
 
 // evalDocCoverage converts a docSummary into an evaluation.
