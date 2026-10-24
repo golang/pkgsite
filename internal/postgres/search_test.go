@@ -347,6 +347,11 @@ func resultGuard(t *testing.T, resultOrder []string) func(string) func() {
 	return guardTestResult
 }
 
+var testSearchers = map[string]searcher{
+	"popular": (*DB).popularSearch,
+	"deep":    (*DB).deepSearch,
+}
+
 func TestSearch(t *testing.T) {
 	// Cannot be run in parallel with other search tests, because it reads
 	// metrics before and after (see responseDelta below).
@@ -450,7 +455,7 @@ func TestSearch(t *testing.T) {
 				Offset:         0,
 				MaxResultCount: 100,
 			}
-			resp, err := testDB.hedgedSearch(ctx, "foo", 2, opts, pkgSearchers, guardTestResult)
+			resp, err := testDB.hedgedSearch(ctx, "foo", 2, opts, testSearchers, guardTestResult)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -484,7 +489,7 @@ func TestSearchErrors(t *testing.T) {
 	// error.
 	errorIn := func(searcherName string) map[string]searcher {
 		newSearchers := make(map[string]searcher)
-		for name, search := range pkgSearchers {
+		for name, search := range testSearchers {
 			if name == searcherName {
 				name := name
 				newSearchers[name] = func(*DB, context.Context, string, int, SearchOptions) searchResponse {
@@ -697,7 +702,7 @@ func TestInsertSearchDocumentAndSearch(t *testing.T) {
 			},
 		},
 	} {
-		for method, searcher := range pkgSearchers {
+		for method, searcher := range testSearchers {
 			t.Run(test.name+":"+method, func(t *testing.T) {
 				testDB, release := acquire(t)
 				defer release()
@@ -771,7 +776,7 @@ func TestSearchPenalties(t *testing.T) {
 		testDB.MustInsertModule(t, v)
 	}
 
-	for method, searcher := range pkgSearchers {
+	for method, searcher := range testSearchers {
 		t.Run(method, func(t *testing.T) {
 			opts := SearchOptions{
 				Offset:         0,

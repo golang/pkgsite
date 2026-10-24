@@ -88,8 +88,15 @@ type searcher func(db *DB, ctx context.Context, q string, limit int, opts Search
 
 // The pkgSearchers used by Search.
 var pkgSearchers = map[string]searcher{
-	"popular": (*DB).popularSearch,
-	"deep":    (*DB).deepSearch,
+	// Metric shows that for the majority of searches we handle (~99.5%),
+	// deepSearch wins the hedged race between popularSearch and deepSearch.
+	// When handling searches for popular terms, deepSearch does take a longer
+	// amount of time (around 1-3 seconds), but Redis cache makes this longer
+	// search pretty rare. Therefore, disable popularSearch for now to avoid
+	// putting undue load on our database.
+	//
+	// "popular": (*DB).popularSearch,
+	"deep": (*DB).deepSearch,
 }
 
 var symbolSearchers = map[string]searcher{
