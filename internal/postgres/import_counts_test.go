@@ -235,6 +235,24 @@ func TestUpdateSearchDocumentsImportedByCount(t *testing.T) {
 		// counted in imported_by_module_count.
 		_ = validateImportedByCountAndGetSearchDocument(t, testDB, "fmt", 1, 2)
 	})
+	t.Run("limit", func(t *testing.T) {
+		testDB, release := acquire(t)
+		defer release()
+
+		m := sample.Module("mod.com/A", "v1.0.0", "p1", "p2", "p3", "p4")
+		testDB.MustInsertModule(t, m)
+
+		np, nm, err := testDB.UpdateSearchDocumentsImportedByCount(ctx, &ImporterCountOptions{
+			BatchSize: 2,
+			Limit:     3,
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if np != 3 || nm != 3 {
+			t.Errorf("got (%d, %d) updated, want (3, 3)", np, nm)
+		}
+	})
 }
 
 func TestUpdateSearchDocumentsImportedByCountWithCounts(t *testing.T) {

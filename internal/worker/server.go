@@ -278,15 +278,19 @@ const (
 	// The Cloud Scheduler max timeout is 30 minutes.
 	// Default to less for wiggle room.
 	defaultMaxTime = 26 * time.Minute
+	// Update as many counts as possible in the given time.
+	defaultLimit = 0
 )
 
 // handleUpdateImportedByCount updates imported_by_count for all packages.
 func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Request) error {
 	batchSize := parseIntParam(r, "batch", defaultBatchSize)
+	limit := parseIntParam(r, "limit", defaultLimit)
 	np, nm, err := s.db.UpdateSearchDocumentsImportedByCount(r.Context(), &postgres.ImporterCountOptions{
 		BatchSize: batchSize,
 		Staleness: defaultStaleness,
 		MaxTime:   defaultMaxTime,
+		Limit:     limit,
 	})
 	if err != nil {
 		return err

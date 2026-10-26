@@ -21,6 +21,9 @@ type ImporterCountOptions struct {
 	// (in a single transaction, with the rows locked).
 	// If zero, a reasonable default is used.
 	BatchSize int
+	// A hard limit on the number of rows to update (per kind: applies separately to modules
+	// and packages). If zero, then no limit.
+	Limit int
 	// Maximum time to spend updating. If zero, then no max.
 	MaxTime time.Duration
 	// How old a count has to be before updating it.
@@ -221,9 +224,17 @@ func (db *DB) updateImporterCounts(ctx context.Context, query, countCol string, 
 	cutoff := time.Now().Add(-opts.Staleness)
 	deadline := time.Now().Add(opts.MaxTime)
 	for time.Now().Before(deadline) {
+		batchSize := opts.BatchSize
+		if opts.Limit > 0 {
+			rem := opts.Limit - int(nUpdated)
+			if rem <= 0 {
+				break
+			}
+			batchSize = min(batchSize, rem)
+		}
 		var nu int64
 		err = db.db.Transact(ctx, sql.LevelDefault, func(tx *database.DB) error {
-			if _, err := tx.Exec(ctx, query, cutoff, opts.BatchSize); err != nil {
+			if _, err := tx.Exec(ctx, query, cutoff, batchSize); err != nil {
 				return fmt.Errorf("creating temp table: %w", err)
 			}
 			var err error
