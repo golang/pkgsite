@@ -185,10 +185,11 @@ type Cacher interface {
 // cache.
 func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authValues []string) {
 	var (
-		detailHandler http.Handler = s.errorHandler(s.serveDetails)
-		fetchHandler  http.Handler
-		searchHandler http.Handler = s.errorHandler(s.serveSearch)
-		vulnHandler   http.Handler = s.errorHandler(s.serveVuln)
+		detailHandler    http.Handler = s.errorHandler(s.serveDetails)
+		fetchHandler     http.Handler
+		searchHandler    http.Handler = s.errorHandler(s.serveSearch)
+		vulnHandler      http.Handler = s.errorHandler(s.serveVuln)
+		apiSearchHandler http.Handler = s.apiHandler(api.ServeSearch)
 	)
 	if s.fetchServer != nil {
 		fetchHandler = s.errorHandler(s.fetchServer.ServeFetch)
@@ -201,6 +202,9 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 		detailHandler = cacher.Cache("details", detailsTTL, authValues)(detailHandler)
 		searchHandler = cacher.Cache("search", searchTTL, authValues)(searchHandler)
 		vulnHandler = cacher.Cache("vuln", vulnTTL, authValues)(vulnHandler)
+		// TODO: Shorten the Redis TTL for non-symbol API package searches to
+		// defaultTTL (10m) once downstream CDN caching is enabled.
+		apiSearchHandler = apiCacheHeaders(cacher.Cache("api-search", searchTTL, authValues)(apiSearchHandler))
 	}
 	// Each AppEngine instance is created in response to a start request, which
 	// is an empty HTTP GET request to /_ah/start when scaling is set to manual
@@ -248,7 +252,7 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	handle("GET /v1/module/", s.apiHandler(api.ServeModule))
 	handle("GET /v1/versions/", s.apiHandler(api.ServeModuleVersions))
 	handle("GET /v1/packages/", s.apiHandler(api.ServeModulePackages))
-	handle("GET /v1/search", s.apiHandler(api.ServeSearch))
+	handle("GET /v1/search", apiSearchHandler)
 	handle("GET /v1/vulns/", s.apiHandler(api.ServeVulnerabilities(s.vulnClient)))
 	handle("GET /v1/api", s.apiDocHandler())
 	handle("GET /api", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -453,12 +457,13 @@ var slowSymbolSearches = map[string]bool{
 
 // searchTTL assigns the cache TTL for search requests.
 func searchTTL(r *http.Request) time.Duration {
-	if searchMode(r) == searchModeSymbol {
-		q, _ := searchQueryAndFilters(r)
-		if slowSymbolSearches[strings.ToLower(q)] {
-			// Slow searches should be computed on deploy. Cache them for a long time.
-			return slowSymbolSearchTTL
-		}
+	q := strings.TrimSpace(r.URL.Query().Get("symbol"))
+	if q == "" && searchMode(r) == searchModeSymbol {
+		q, _ = searchQueryAndFilters(r)
+	}
+	if slowSymbolSearches[strings.ToLower(q)] {
+		// Slow searches should be computed on deploy. Cache them for a long time.
+		return slowSymbolSearchTTL
 	}
 	return symbolSearchTTL
 }
@@ -466,6 +471,20 @@ func searchTTL(r *http.Request) time.Duration {
 // vulnTTL assigns the cache TTL for vuln requests.
 func vulnTTL(r *http.Request) time.Duration {
 	return defaultTTL
+}
+
+// apiCacheHeaders sets the default JSON and Cache-Control headers for cached
+// API responses before invoking h. Because cacher.Cache only records and
+// replays response body bytes for 200 OK responses, pre-setting these headers
+// ensures cache hits still emit Content-Type and Cache-Control. On cache
+// misses, the underlying API handler (or api.ServeError) overwrites
+// Cache-Control as appropriate before writing the status header.
+func apiCacheHeaders(h http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "public, max-age=3600")
+		h.ServeHTTP(w, r)
+	})
 }
 
 // TagRoute categorizes incoming requests to the frontend for use in

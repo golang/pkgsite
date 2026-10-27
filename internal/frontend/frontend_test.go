@@ -7,6 +7,7 @@ package frontend
 import (
 	"context"
 	"encoding/json"
+	"maps"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -100,6 +101,91 @@ func TestDetailsTTL(t *testing.T) {
 			t.Errorf("detailsTTL(%v) = %v, want %v", test.r, got, test.want)
 		}
 	}
+}
+
+func TestSearchTTL(t *testing.T) {
+	tests := []struct {
+		path string
+		want time.Duration
+	}{
+		{"/search?q=http&m=package", symbolSearchTTL},
+		{"/search?q=New&m=symbol", slowSymbolSearchTTL},
+		{"/v1/search?q=http", symbolSearchTTL},
+		{"/v1/search?q=http&symbol=ListenAndServe", symbolSearchTTL},
+		{"/v1/search?q=http&symbol=New", slowSymbolSearchTTL},
+		{"/v1/search?symbol=client", slowSymbolSearchTTL},
+	}
+	for _, test := range tests {
+		r := mustRequest(test.path, t)
+		if got := searchTTL(r); got != test.want {
+			t.Errorf("searchTTL(%q) = %v, want %v", test.path, got, test.want)
+		}
+	}
+}
+
+type fakeCacher map[string][]byte
+
+func (fc fakeCacher) Cache(string, func(*http.Request) time.Duration, []string) func(http.Handler) http.Handler {
+	return func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if b, ok := fc[r.URL.String()]; ok {
+				w.Write(b)
+				return
+			}
+			rec := httptest.NewRecorder()
+			h.ServeHTTP(rec, r)
+			maps.Copy(w.Header(), rec.Header())
+			w.WriteHeader(rec.Code)
+			w.Write(rec.Body.Bytes())
+			if rec.Code == http.StatusOK {
+				fc[r.URL.String()] = rec.Body.Bytes()
+			}
+		})
+	}
+}
+
+func TestAPISearchCache(t *testing.T) {
+	cacher := make(fakeCacher)
+	_, handler := newTestServer(t, cacher)
+
+	t.Run("cache miss then hit preserves headers and body", func(t *testing.T) {
+		for i := range 2 {
+			if i == 1 {
+				if _, ok := cacher["/v1/search?q=foo"]; !ok {
+					t.Fatal("expected first request to populate cache")
+				}
+				cacher["/v1/search?q=foo"] = []byte("cached")
+			}
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, httptest.NewRequest("GET", "/v1/search?q=foo", nil))
+			if got, want := w.Code, http.StatusOK; got != want {
+				t.Fatalf("req %d: got status %d, want %d", i, got, want)
+			}
+			if got, want := w.Header().Get("Content-Type"), "application/json"; got != want {
+				t.Errorf("req %d: got Content-Type %q, want %q", i, got, want)
+			}
+			if got, want := w.Header().Get("Cache-Control"), "public, max-age=3600"; got != want {
+				t.Errorf("req %d: got Cache-Control %q, want %q", i, got, want)
+			}
+			if i == 1 && w.Body.String() != "cached" {
+				t.Errorf("got body %q, want %q", w.Body.String(), "cached")
+			}
+		}
+	})
+
+	t.Run("error response overwrites Cache-Control and is not cached", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, httptest.NewRequest("GET", "/v1/search", nil))
+		if got, want := w.Code, http.StatusBadRequest; got != want {
+			t.Fatalf("got status %d, want %d", got, want)
+		}
+		if got, want := w.Header().Get("Cache-Control"), "public, max-age=600"; got != want {
+			t.Errorf("got Cache-Control %q, want %q", got, want)
+		}
+		if _, ok := cacher["/v1/search"]; ok {
+			t.Error("expected 400 error response not to be cached")
+		}
+	})
 }
 
 func TestTagRoute(t *testing.T) {
