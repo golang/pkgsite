@@ -137,6 +137,24 @@ func TestCache(t *testing.T) {
 			wantBody:      "6",
 			wantStatus:    http.StatusOK,
 		},
+		{
+			label:         "query params first order",
+			path:          "A?b=2&a=1",
+			body:          "7",
+			status:        http.StatusOK,
+			wantHitCounts: map[bool]int{false: 4, true: 2},
+			wantBody:      "7",
+			wantStatus:    http.StatusOK,
+		},
+		{
+			label:         "query params reordered hits cache",
+			path:          "A?a=1&b=2",
+			body:          "8",
+			status:        http.StatusForbidden,
+			wantHitCounts: map[bool]int{false: 4, true: 3},
+			wantBody:      "7",
+			wantStatus:    http.StatusOK,
+		},
 	}
 
 	for _, test := range tests {
@@ -182,6 +200,25 @@ func TestCache(t *testing.T) {
 		}
 		if diff := cmp.Diff(test.wantHitCounts, hitCounts); diff != "" {
 			t.Errorf("[%s] CacheResultCount diff (-want +got):\n%s", test.label, diff)
+		}
+	}
+}
+
+func TestCacheKey(t *testing.T) {
+	for _, test := range []struct {
+		rawURL string
+		want   string
+	}{
+		{"/v1/search", "/v1/search"},
+		{"/v1/search?q=http", "/v1/search?q=http"},
+		{"/v1/search?limit=10&q=http", "/v1/search?limit=10&q=http"},
+		{"/v1/search?q=http&limit=10", "/v1/search?limit=10&q=http"},
+		{"/v1/search?symbol=New&q=http&filter=net", "/v1/search?filter=net&q=http&symbol=New"},
+		{"/v1/search?q=%ZZ", "/v1/search?q=%ZZ"},
+	} {
+		req := httptest.NewRequest("GET", test.rawURL, nil)
+		if got := cacheKey(req.URL); got != test.want {
+			t.Errorf("cacheKey(%q) = %q, want %q", test.rawURL, got, test.want)
 		}
 	}
 }

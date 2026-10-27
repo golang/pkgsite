@@ -11,6 +11,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"slices"
 	"strconv"
 	"time"
@@ -148,7 +149,7 @@ func (c *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ctx := r.Context()
-	key := r.URL.String()
+	key := cacheKey(r.URL)
 	start := time.Now()
 	reader, hit := c.get(ctx, key)
 	recordCacheResult(ctx, c.name, hit, time.Since(start))
@@ -169,6 +170,22 @@ func (c *cache) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			go c.put(ctx, key, rec, ttl)
 		}
 	}
+}
+
+// cacheKey returns a canonical cache key for u by sorting query parameters
+// alphabetically so requests with equivalent query parameters in different
+// orders share the same cache entry.
+func cacheKey(u *url.URL) string {
+	if u.RawQuery == "" {
+		return u.String()
+	}
+	q, err := url.ParseQuery(u.RawQuery)
+	if err != nil {
+		return u.String()
+	}
+	u2 := *u
+	u2.RawQuery = q.Encode()
+	return u2.String()
 }
 
 func (c *cache) get(ctx context.Context, key string) (io.Reader, bool) {
