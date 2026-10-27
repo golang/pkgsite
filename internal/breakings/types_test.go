@@ -296,16 +296,16 @@ func TestNewSimpleType(t *testing.T) {
 
 func TestSymbolSetChange(t *testing.T) {
 	oldSet := newSymbolSet()
-	oldSet.symbols["Removed"] = newSimpleType(ast.NewIdent("int"))
-	oldSet.symbols["Unchanged"] = newSimpleType(ast.NewIdent("string"))
-	oldSet.symbols["ChangedBreaking"] = newSimpleType(ast.NewIdent("int"))
-	oldSet.symbols["ChangedCompatible"] = parseType(t, "func ChangedCompatible(x int)")
+	oldSet.add("Removed", "", token.VAR, newSimpleType(ast.NewIdent("int")))
+	oldSet.add("Unchanged", "", token.VAR, newSimpleType(ast.NewIdent("string")))
+	oldSet.add("ChangedBreaking", "", token.VAR, newSimpleType(ast.NewIdent("int")))
+	oldSet.add("ChangedCompatible", "", token.FUNC, parseType(t, "func ChangedCompatible(x int)"))
 
 	newSet := newSymbolSet()
-	newSet.symbols["Unchanged"] = newSimpleType(ast.NewIdent("string"))
-	newSet.symbols["ChangedBreaking"] = newSimpleType(ast.NewIdent("bool"))
-	newSet.symbols["ChangedCompatible"] = parseType(t, "func ChangedCompatible(x int, y ...string)")
-	newSet.symbols["Added"] = newSimpleType(ast.NewIdent("float64"))
+	newSet.add("Unchanged", "", token.VAR, newSimpleType(ast.NewIdent("string")))
+	newSet.add("ChangedBreaking", "", token.VAR, newSimpleType(ast.NewIdent("bool")))
+	newSet.add("ChangedCompatible", "", token.FUNC, parseType(t, "func ChangedCompatible(x int, y ...string)"))
+	newSet.add("Added", "", token.VAR, newSimpleType(ast.NewIdent("float64")))
 
 	want := map[string]ChangeKind{
 		"Removed":           ChangeBreaking,

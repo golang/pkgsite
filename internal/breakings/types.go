@@ -10,6 +10,7 @@ import (
 	"cmp"
 	"fmt"
 	"go/ast"
+	"go/token"
 	"iter"
 	"maps"
 	"slices"
@@ -176,28 +177,57 @@ func (f *funcType) String() string {
 	return "func" + f.sigString()
 }
 
-// symbolSet is a set of symbols and their types.
+// A symbol is a type, function, const, var, method or field in a Go program.
+type symbol struct {
+	name  string
+	doc   string      // the symbol's doc comment
+	kind  token.Token // CONST, VAR, FUNC, TYPE, or ILLEGAL for fields and methods
+	stype syntaxType
+}
+
+// symbolSet is a set of symbols.
 type symbolSet struct {
-	symbols map[string]syntaxType
+	symbols map[string]*symbol
 }
 
 func newSymbolSet() *symbolSet {
-	return &symbolSet{symbols: make(map[string]syntaxType)}
+	return &symbolSet{symbols: make(map[string]*symbol)}
+}
+
+func (s *symbolSet) add(name, doc string, kind token.Token, stype syntaxType) {
+	s.symbols[name] = &symbol{name: name, doc: doc, kind: kind, stype: stype}
+}
+
+func (s *symbolSet) stype(name string) syntaxType {
+	if s == nil || s.symbols[name] == nil {
+		return nil
+	}
+	return s.symbols[name].stype
 }
 
 // changes returns an iterator of breaking changes from old to new.
 // It assumes that all the symbols in both sets are exported.
 func (old *symbolSet) changes(newSet *symbolSet) iter.Seq2[string, ChangeKind] {
 	return func(yield func(string, ChangeKind) bool) {
-		for name, oldType := range old.symbols {
-			newType, ok := newSet.symbols[name]
+		for name, oldSym := range old.symbols {
+			newSym, ok := newSet.symbols[name]
 			if !ok {
 				// It's a breaking change to remove a symbol.
 				if !yield(name, ChangeBreaking) {
 					return
 				}
+			} else if oldSym.kind != newSym.kind && !(oldSym.kind == token.FUNC && newSym.kind == token.VAR) {
+				// With one exception, a change between kinds (var to const, func to type, etc.)
+				// is a breaking change.
+				// It's okay to change a function to a variable of the same type.
+				// (If there is a type mismatch, we'll catch it below.)
+				// The reverse (variable to function) is breaking because there
+				// might be assignments to the variable.
+				if !yield(name, ChangeBreaking) {
+					return
+				}
 			} else {
-				for name2, c := range oldType.changes(newType) {
+				for name2, c := range oldSym.stype.changes(newSym.stype) {
 					n := name
 					if name2 != "" {
 						n += "." + name2
@@ -229,7 +259,8 @@ func newInterfaceType(it *ast.InterfaceType, defs *defs) *interfaceType {
 			// There is only one name
 			name := m.Names[0]
 			if name.IsExported() {
-				res.methods.symbols[name.Name] = newType(m.Type, defs)
+				// TODO: get doc comment.
+				res.methods.add(name.Name, "TODO", token.ILLEGAL, newType(m.Type, defs))
 			} else {
 				res.unexportedMethod = name.Name
 			}
@@ -284,10 +315,10 @@ func (it *interfaceType) String() string {
 	if it.methods != nil {
 		for _, name := range slices.Sorted(maps.Keys(it.methods.symbols)) {
 			m := it.methods.symbols[name]
-			if ft, ok := m.(*funcType); ok {
+			if ft, ok := m.stype.(*funcType); ok {
 				methods = append(methods, name+ft.sigString())
 			} else {
-				methods = append(methods, name+" "+m.String())
+				methods = append(methods, name+" "+m.stype.String())
 			}
 		}
 	}
@@ -341,9 +372,10 @@ func newStructType(st *ast.StructType, defs *defs) *structType {
 		}
 		// We haven't seen this name before and it's not a duplicate, so it's a selectable field.
 		stype := newType(f.typeExpr, defs)
-		selFields.symbols[f.name] = stype
+		// TODO: get doc comment.
+		selFields.add(f.name, "", token.ILLEGAL, stype)
 		if f.depth == 0 {
-			topFields.symbols[f.name] = stype
+			topFields.add(f.name, "", token.ILLEGAL, stype)
 		}
 	}
 	return &structType{topLevelFields: topFields, selectableFields: selFields}
@@ -466,7 +498,7 @@ func (s *structType) String() string {
 	}
 	var fields []string
 	for _, name := range slices.Sorted(maps.Keys(s.topLevelFields.symbols)) {
-		fields = append(fields, name+" "+s.topLevelFields.symbols[name].String())
+		fields = append(fields, name+" "+s.topLevelFields.symbols[name].stype.String())
 	}
 	return "struct{" + strings.Join(fields, "; ") + "}"
 }
@@ -485,7 +517,8 @@ func newNamedType(ts *ast.TypeSpec, defs *defs) *namedType {
 	methods := newSymbolSet()
 	valueMethodNames := map[string]bool{}
 	for _, m := range defs.methodsFor(name) {
-		methods.symbols[m.Name.Name] = newMethodType(m)
+		// TODO: get doc comment.
+		methods.add(m.Name.Name, "", token.ILLEGAL, newMethodType(m))
 		if !isPointerReceiver(m.Recv) {
 			valueMethodNames[m.Name.Name] = true
 		}

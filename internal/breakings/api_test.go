@@ -277,8 +277,8 @@ func TestAPI(t *testing.T) {
 		}
 
 		for name, wantKind := range want {
-			if got := api.kinds[name].String(); got != wantKind {
-				t.Errorf("API.kinds[%q] = %v, want %v", name, got, wantKind)
+			if got := api.symbols.symbols[name].kind.String(); got != wantKind {
+				t.Errorf("API.symbols[%q].kind = %v, want %v", name, got, wantKind)
 			}
 		}
 	}

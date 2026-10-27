@@ -28,7 +28,6 @@ type API struct {
 	packagePath string
 	version     string
 	symbols     *symbolSet
-	kinds       map[string]token.Token // CONST, VAR, FUNC or TYPE
 }
 
 // NewAPIFromPackage constructs an API from a [godoc.Package].
@@ -54,7 +53,6 @@ func NewAPI(packagePath, version string, files []*ast.File) (*API, error) {
 		return nil, err
 	}
 	syms := newSymbolSet()
-	kinds := make(map[string]token.Token)
 	for _, file := range files {
 		for _, decl := range file.Decls {
 			switch decl := decl.(type) {
@@ -63,8 +61,8 @@ func NewAPI(packagePath, version string, files []*ast.File) (*API, error) {
 				if decl.Recv != nil || !decl.Name.IsExported() {
 					continue
 				}
-				syms.symbols[decl.Name.Name] = newFuncType(decl.Type)
-				kinds[decl.Name.Name] = token.FUNC
+				// TODO: get doc comment.
+				syms.add(decl.Name.Name, "", token.FUNC, newFuncType(decl.Type))
 			case *ast.GenDecl:
 				switch decl.Tok {
 				case token.CONST, token.VAR:
@@ -76,8 +74,8 @@ func NewAPI(packagePath, version string, files []*ast.File) (*API, error) {
 								if i < len(spec.Values) {
 									val = spec.Values[i]
 								}
-								syms.symbols[name.Name] = newValueSpecType(decl.Tok, spec.Type, val, defs)
-								kinds[name.Name] = decl.Tok
+								// TODO: get doc comment.
+								syms.add(name.Name, "", decl.Tok, newValueSpecType(decl.Tok, spec.Type, val, defs))
 							}
 						}
 					}
@@ -86,12 +84,12 @@ func NewAPI(packagePath, version string, files []*ast.File) (*API, error) {
 					for _, spec := range decl.Specs {
 						spec := spec.(*ast.TypeSpec)
 						if spec.Name.IsExported() {
+							// TODO: get doc comment.
 							if spec.Assign.IsValid() {
-								syms.symbols[spec.Name.Name] = newAliasType(spec, defs)
+								syms.add(spec.Name.Name, "", token.TYPE, newAliasType(spec, defs))
 							} else {
-								syms.symbols[spec.Name.Name] = newNamedType(spec, defs)
+								syms.add(spec.Name.Name, "", token.TYPE, newNamedType(spec, defs))
 							}
-							kinds[spec.Name.Name] = token.TYPE
 						}
 					}
 				}
@@ -102,7 +100,6 @@ func NewAPI(packagePath, version string, files []*ast.File) (*API, error) {
 		packagePath: packagePath,
 		version:     version,
 		symbols:     syms,
-		kinds:       kinds,
 	}, nil
 }
 
@@ -178,37 +175,12 @@ func newValueSpecType(tok token.Token, typ, value ast.Expr, defs *defs) syntaxTy
 func (old *API) Changes(newa *API) iter.Seq2[string, ChangeKind] {
 	return func(yield func(string, ChangeKind) bool) {
 		seen := map[string]bool{}
-
-		yld := func(name string, kind ChangeKind) bool {
+		for name, kind := range old.symbols.changes(newa.symbols) {
 			if seen[name] {
-				return true
+				continue
 			}
 			seen[name] = true
-			return yield(name, kind)
-		}
-
-		// Check for kind mismatches. With one exception (see below),
-		// a change between kinds (var to const, func to type, etc.) is
-		// a breaking change.
-		for name, oldKind := range old.kinds {
-			newKind, ok := newa.kinds[name]
-			if !ok || oldKind == newKind {
-				continue
-			}
-			if oldKind == token.FUNC && newKind == token.VAR {
-				// It's okay to change a function to a variable of the same type.
-				// (If there is a type mismatch, we'll catch it below.)
-				// The reverse (variable to function) is breaking because there
-				// might be assignments to the variable.
-				continue
-			}
-			if !yld(name, ChangeBreaking) {
-				return
-			}
-		}
-
-		for name, kind := range old.symbols.changes(newa.symbols) {
-			if !yld(name, kind) {
+			if !yield(name, kind) {
 				return
 			}
 		}
@@ -221,16 +193,13 @@ func (old *API) Changes(newa *API) iter.Seq2[string, ChangeKind] {
 // (e.g. "MyStruct.Field" or "MyType.Method").
 func (a *API) Definition(name string) string {
 	top, member, hasMember := strings.Cut(name, ".")
+	sym := a.symbols.symbols[top]
+	if sym == nil || sym.stype == nil {
+		return ""
+	}
+	st := sym.stype
 	if !hasMember {
-		st, ok := a.symbols.symbols[top]
-		if !ok || st == nil {
-			return ""
-		}
-		tok, ok := a.kinds[top]
-		if !ok {
-			return st.String()
-		}
-		switch tok {
+		switch sym.kind {
 		case token.FUNC:
 			if ft, ok := st.(*funcType); ok {
 				return fmt.Sprintf("func %s%s", top, ft.sigString())
@@ -259,64 +228,48 @@ func (a *API) Definition(name string) string {
 		}
 	}
 
-	topType, ok := a.symbols.symbols[top]
-	if !ok || topType == nil {
-		return ""
-	}
-	return memberDefinition(top, member, topType)
+	return memberDefinition(top, member, st)
 }
 
 func memberDefinition(top, member string, st syntaxType) string {
 	switch t := st.(type) {
 	case *namedType:
-		if t.methods != nil {
-			if mType, ok := t.methods.symbols[member]; ok && mType != nil {
-				recv := top
-				if !t.valueMethodNames[member] {
-					recv = "*" + top
-				}
-				if ft, ok := mType.(*funcType); ok {
-					return fmt.Sprintf("func (%s) %s%s", recv, member, ft.sigString())
-				}
-				return fmt.Sprintf("func (%s) %s %s", recv, member, mType.String())
+		if mType := t.methods.stype(member); mType != nil {
+			recv := top
+			if !t.valueMethodNames[member] {
+				recv = "*" + top
 			}
+			if ft, ok := mType.(*funcType); ok {
+				return fmt.Sprintf("func (%s) %s%s", recv, member, ft.sigString())
+			}
+			return fmt.Sprintf("func (%s) %s %s", recv, member, mType.String())
 		}
 		if t.underlying != nil {
 			return memberDefinition(top, member, t.underlying)
 		}
 
 	case *structType:
-		if t.topLevelFields != nil {
-			if fType, ok := t.topLevelFields.symbols[member]; ok && fType != nil {
-				return fmt.Sprintf("%s.%s %s", top, member, fType.String())
-			}
+		if fType := t.topLevelFields.stype(member); fType != nil {
+			return fmt.Sprintf("%s.%s %s", top, member, fType.String())
 		}
-		if t.selectableFields != nil {
-			if fType, ok := t.selectableFields.symbols[member]; ok && fType != nil {
-				return fmt.Sprintf("%s.%s %s (promoted)", top, member, fType.String())
-			}
+		if fType := t.selectableFields.stype(member); fType != nil {
+			return fmt.Sprintf("%s.%s %s (promoted)", top, member, fType.String())
 		}
 		if first, rest, ok := strings.Cut(member, "."); ok {
-			if t.topLevelFields != nil {
-				if fType, ok := t.topLevelFields.symbols[first]; ok && fType != nil {
-					return memberDefinition(top+"."+first, rest, fType)
-				}
+			if fType := t.topLevelFields.stype(first); fType != nil {
+				return memberDefinition(top+"."+first, rest, fType)
 			}
-			if t.selectableFields != nil {
-				if fType, ok := t.selectableFields.symbols[first]; ok && fType != nil {
-					return memberDefinition(top+"."+first, rest, fType)
-				}
+			if fType := t.selectableFields.stype(first); fType != nil {
+				return memberDefinition(top+"."+first, rest, fType)
 			}
 		}
 
 	case *interfaceType:
-		if t.methods != nil {
-			if mType, ok := t.methods.symbols[member]; ok && mType != nil {
-				if ft, ok := mType.(*funcType); ok {
-					return fmt.Sprintf("%s.%s%s", top, member, ft.sigString())
-				}
-				return fmt.Sprintf("%s.%s %s", top, member, mType.String())
+		if mType := t.methods.stype(member); mType != nil {
+			if ft, ok := mType.(*funcType); ok {
+				return fmt.Sprintf("%s.%s%s", top, member, ft.sigString())
 			}
+			return fmt.Sprintf("%s.%s %s", top, member, mType.String())
 		}
 		if member == t.unexportedMethod {
 			return fmt.Sprintf("%s.%s(...)", top, member)
