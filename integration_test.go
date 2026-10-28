@@ -16,6 +16,7 @@ import (
 	"context"
 	"fmt"
 	"io/fs"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -89,6 +90,10 @@ func TestIntegration(t *testing.T) {
 		}
 		t.Skipf("neither docker nor podman is installed: %v, %v", errDocker, errPodman)
 	}
+	dockerCmd := "docker"
+	if errDocker != nil {
+		dockerCmd = "podman"
+	}
 
 	// Tear the compose project down on the way in as well as the way out. A
 	// build that is killed part way through leaves containers behind holding
@@ -149,9 +154,92 @@ func TestIntegration(t *testing.T) {
 	t.Run("Services", func(t *testing.T) {
 		t.Parallel()
 
-		runStage(t, "AllBash", "./devtools/docker/compose.sh", "run", "--rm", "allbash", "test")
+		if os.Getenv("GO_BUILDER_NAME") != "" {
+			// On ephemeral builders, run Go tests directly on the host using the
+			// host Go toolchain and caches against tmpfs PostgreSQL.
+			t.Run("AllBash", func(t *testing.T) {
+				dbEnv := startPostgres(t, dockerCmd)
+				// Clear GO_BUILDER_NAME and PKGSITE_CI_MODE so "go test ./..." inside
+				// all.bash skips TestIntegration instead of recursing.
+				allBashEnv := append(dbEnv, "GO_BUILDER_NAME=", modeEnv+"=")
+				runCmdEnv(t, allBashEnv, "./all.bash", "test")
+			})
+		} else {
+			runStage(t, "AllBash", "./devtools/docker/compose.sh", "run", "--rm", "allbash", "test")
+		}
 		runStage(t, "SearchTest", "./tests/search/run.sh")
 	})
+}
+
+// startPostgres starts an ephemeral tmpfs-backed PostgreSQL container with
+// fsync disabled and returns environment variables pointing at it.
+func startPostgres(t *testing.T, dockerCmd string) []string {
+	t.Helper()
+	cmd := exec.CommandContext(t.Context(), dockerCmd, "run", "--detach",
+		"--tmpfs", "/var/lib/postgresql/data",
+		"-e", "LANG=C",
+		"-e", "POSTGRES_DB=discovery-db",
+		"-e", "POSTGRES_USER=postgres",
+		"-e", "POSTGRES_PASSWORD=postgres",
+		"-p", "127.0.0.1::5432",
+		"docker.io/pgvector/pgvector:pg14",
+		"postgres", "-c", "fsync=off", "-c", "synchronous_commit=off", "-c", "full_page_writes=off", "-c", "max_connections=200",
+	)
+	cmd.Stderr = t.Output()
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatalf("starting postgres container: %v", err)
+	}
+	cid := strings.TrimSpace(string(out))
+	t.Cleanup(func() {
+		ctx, cancel := context.WithTimeout(context.Background(), composeDownTimeout)
+		defer cancel()
+		if out, err := exec.CommandContext(ctx, dockerCmd, "rm", "-f", cid).CombinedOutput(); err != nil {
+			t.Logf("removing postgres container %s: %v\n%s", cid, err, out)
+		}
+	})
+
+	portCmd := exec.CommandContext(t.Context(), dockerCmd, "port", cid, "5432/tcp")
+	portCmd.Stderr = t.Output()
+	portOut, err := portCmd.Output()
+	if err != nil {
+		t.Fatalf("querying postgres port: %v", err)
+	}
+	firstLine, _, _ := strings.Cut(strings.TrimSpace(string(portOut)), "\n")
+	_, port, err := net.SplitHostPort(strings.TrimSpace(firstLine))
+	if err != nil {
+		t.Fatalf("parsing postgres port %q: %v", firstLine, err)
+	}
+
+	deadline := time.Now().Add(60 * time.Second)
+	for {
+		if exec.CommandContext(t.Context(), dockerCmd, "exec", cid, "pg_isready", "-h", "127.0.0.1", "-U", "postgres").Run() == nil {
+			if conn, err := net.DialTimeout("tcp", "127.0.0.1:"+port, time.Second); err == nil {
+				conn.Close()
+				break
+			}
+		}
+		if time.Now().After(deadline) || t.Context().Err() != nil {
+			logCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			logs, _ := exec.CommandContext(logCtx, dockerCmd, "logs", cid).CombinedOutput()
+			cancel()
+			if err := t.Context().Err(); err != nil {
+				t.Fatalf("waiting for postgres container: %v\n%s", err, logs)
+			}
+			t.Fatalf("postgres container did not become ready within 60s:\n%s", logs)
+		}
+		time.Sleep(250 * time.Millisecond)
+	}
+
+	return []string{
+		"GO_DISCOVERY_DATABASE_HOST=127.0.0.1",
+		"GO_DISCOVERY_DATABASE_PORT=" + port,
+		"GO_DISCOVERY_DATABASE_USER=postgres",
+		"GO_DISCOVERY_DATABASE_PASSWORD=postgres",
+		"GO_DISCOVERY_DATABASE_NAME=discovery-db",
+		"GO_DISCOVERY_LOG_LEVEL=info",
+		"GO_DISCOVERY_SERVE_STATS=true",
+	}
 }
 
 // composeDownTimeout bounds teardown, which must not hang a build.
@@ -208,9 +296,17 @@ func runStage(t *testing.T, stage, name string, args ...string) bool {
 // as it is produced rather than only once the stage finishes.
 func runCmd(t *testing.T, name string, args ...string) {
 	t.Helper()
+	runCmdEnv(t, nil, name, args...)
+}
+
+func runCmdEnv(t *testing.T, extraEnv []string, name string, args ...string) {
+	t.Helper()
 	t.Logf("$ %s %s", name, strings.Join(args, " "))
 
 	cmd := exec.CommandContext(t.Context(), name, args...)
+	if len(extraEnv) > 0 {
+		cmd.Env = append(os.Environ(), extraEnv...)
+	}
 	cmd.Stdout = t.Output()
 	cmd.Stderr = t.Output()
 	if err := cmd.Run(); err != nil {

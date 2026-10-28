@@ -264,10 +264,12 @@ no_race=(
 # integration_test.go will be skipped by "go test" because GO_DISCOVERY_TESTDB
 # is set. (TestLint already ran linters on the host runner before TestIntegration.)
 ci_tests() {
-  # Explicitly mark the working directory as safe in CI.
+  # Explicitly mark the working directory as safe in CI when running as root in Docker.
   # https://github.com/docker-library/golang/issues/452
-  local wd=$(pwd)
-  runcmd git config --system --add safe.directory ${wd}
+  if [[ $(id -u) -eq 0 ]]; then
+    local wd=$(pwd)
+    runcmd git config --system --add safe.directory ${wd}
+  fi
 
   local pkgs=$*
   if [[ $pkgs == '' ]]; then
