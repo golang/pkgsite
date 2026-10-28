@@ -653,3 +653,90 @@ func TestBuiltinAliasShadowing(t *testing.T) {
 		})
 	}
 }
+
+func TestSymbolDoc(t *testing.T) {
+	src1 := `// Package p doc
+// line 2.
+package p
+
+// Func line 1
+// Func line 2
+func F() {}
+
+// Const decl doc.
+const (
+	// Const spec doc.
+	C1 = 1
+	C2 = 2
+)
+
+// Var group doc.
+var (
+	// Var single doc.
+	V1 int
+)
+
+// S is a struct.
+type S struct {
+	// Field X
+	// doc.
+	X int
+}
+
+// M is a method.
+func (S) M() {}
+
+// I is an interface.
+type I interface {
+	// IM is an interface method.
+	IM()
+}
+`
+	src2 := `// Second file doc.
+package p
+`
+	fset := token.NewFileSet()
+	file1, err := parser.ParseFile(fset, "p1.go", src1, parser.ParseComments)
+	if err != nil {
+		t.Fatal(err)
+	}
+	file2, err := parser.ParseFile(fset, "p2.go", src2, parser.ParseComments)
+	if err != nil {
+		t.Fatal(err)
+	}
+	api, err := NewAPI("p", "v1.0.0", []*ast.File{file1, file2})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if got, want := api.packageDoc, "Package p doc line 2.\n\nSecond file doc."; got != want {
+		t.Errorf("packageDoc = %q, want %q", got, want)
+	}
+
+	checkDoc := func(sym *symbol, name, want string) {
+		t.Helper()
+		if sym == nil {
+			t.Fatalf("missing symbol %s", name)
+		}
+		if sym.doc != want {
+			t.Errorf("%s doc = %q, want %q", name, sym.doc, want)
+		}
+	}
+
+	checkDoc(api.symbols.symbols["F"], "F", "Func line 1 Func line 2")
+	checkDoc(api.symbols.symbols["C1"], "C1", "Const decl doc.\nConst spec doc.")
+	checkDoc(api.symbols.symbols["C2"], "C2", "Const decl doc.")
+	checkDoc(api.symbols.symbols["V1"], "V1", "Var group doc.\nVar single doc.")
+	checkDoc(api.symbols.symbols["S"], "S", "S is a struct.")
+	checkDoc(api.symbols.symbols["I"], "I", "I is an interface.")
+
+	sNamed := api.symbols.symbols["S"].stype.(*namedType)
+	checkDoc(sNamed.methods.symbols["M"], "S.M", "M is a method.")
+	sStruct := sNamed.underlying.(*structType)
+	checkDoc(sStruct.topLevelFields.symbols["X"], "S.X (topLevel)", "Field X doc.")
+	checkDoc(sStruct.selectableFields.symbols["X"], "S.X (selectable)", "Field X doc.")
+
+	iNamed := api.symbols.symbols["I"].stype.(*namedType)
+	iType := iNamed.underlying.(*interfaceType)
+	checkDoc(iType.methods.symbols["IM"], "I.IM", "IM is an interface method.")
+}

@@ -205,6 +205,27 @@ func (s *symbolSet) stype(name string) syntaxType {
 	return s.symbols[name].stype
 }
 
+// symbolDoc returns the documentation from a declaration and its spec.
+// It concatenates the docstrings of both declDoc and specDoc and separates them
+// by a newline. All other newlines are replaced with spaces.
+func symbolDoc(declDoc, specDoc *ast.CommentGroup) string {
+	declText := cleanDoc(declDoc)
+	specText := cleanDoc(specDoc)
+	if declText == "" {
+		return specText
+	}
+	if specText == "" || specText == declText {
+		return declText
+	}
+	return declText + "\n" + specText
+}
+
+// cleanDoc cleans a CommentGroup's documentation string by trimming whitespace
+// and replacing newlines with spaces.
+func cleanDoc(cg *ast.CommentGroup) string {
+	return strings.TrimSpace(strings.ReplaceAll(cg.Text(), "\n", " "))
+}
+
 // changes returns an iterator of breaking changes from old to new.
 // It assumes that all the symbols in both sets are exported.
 func (old *symbolSet) changes(newSet *symbolSet) iter.Seq2[string, ChangeKind] {
@@ -259,8 +280,7 @@ func newInterfaceType(it *ast.InterfaceType, defs *defs) *interfaceType {
 			// There is only one name
 			name := m.Names[0]
 			if name.IsExported() {
-				// TODO: get doc comment.
-				res.methods.add(name.Name, "TODO", token.ILLEGAL, newType(m.Type, defs))
+				res.methods.add(name.Name, cleanDoc(m.Doc), token.ILLEGAL, newType(m.Type, defs))
 			} else {
 				res.unexportedMethod = name.Name
 			}
@@ -372,10 +392,9 @@ func newStructType(st *ast.StructType, defs *defs) *structType {
 		}
 		// We haven't seen this name before and it's not a duplicate, so it's a selectable field.
 		stype := newType(f.typeExpr, defs)
-		// TODO: get doc comment.
-		selFields.add(f.name, "", token.ILLEGAL, stype)
+		selFields.add(f.name, f.doc, token.ILLEGAL, stype)
 		if f.depth == 0 {
-			topFields.add(f.name, "", token.ILLEGAL, stype)
+			topFields.add(f.name, f.doc, token.ILLEGAL, stype)
 		}
 	}
 	return &structType{topLevelFields: topFields, selectableFields: selFields}
@@ -383,6 +402,7 @@ func newStructType(st *ast.StructType, defs *defs) *structType {
 
 type field struct {
 	name     string
+	doc      string
 	typeExpr ast.Expr
 	depth    int
 }
@@ -391,10 +411,11 @@ type field struct {
 // It descends into embedded structs.
 func appendExportedFields(st *ast.StructType, defs *defs, depth int, fields []*field, seen map[*ast.StructType]bool) []*field {
 	for _, f := range st.Fields.List {
+		doc := cleanDoc(f.Doc)
 		if len(f.Names) == 0 { // embedded field
 			name, hasSel := baseTypeName(f.Type)
 			if ast.IsExported(name) {
-				fields = append(fields, &field{name, f.Type, depth})
+				fields = append(fields, &field{name, doc, f.Type, depth})
 			}
 			// Exported or not, an embedded struct's exported fields may be visible.
 			if ts := defs.typeFor(name); ts == nil {
@@ -415,7 +436,7 @@ func appendExportedFields(st *ast.StructType, defs *defs, depth int, fields []*f
 		} else {
 			for _, name := range f.Names {
 				if name.IsExported() {
-					fields = append(fields, &field{name.Name, f.Type, depth})
+					fields = append(fields, &field{name.Name, doc, f.Type, depth})
 				}
 			}
 		}
@@ -517,8 +538,7 @@ func newNamedType(ts *ast.TypeSpec, defs *defs) *namedType {
 	methods := newSymbolSet()
 	valueMethodNames := map[string]bool{}
 	for _, m := range defs.methodsFor(name) {
-		// TODO: get doc comment.
-		methods.add(m.Name.Name, "", token.ILLEGAL, newMethodType(m))
+		methods.add(m.Name.Name, cleanDoc(m.Doc), token.ILLEGAL, newMethodType(m))
 		if !isPointerReceiver(m.Recv) {
 			valueMethodNames[m.Name.Name] = true
 		}

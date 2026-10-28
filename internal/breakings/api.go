@@ -26,6 +26,7 @@ import (
 // An API contains the exported symbols for a package.
 type API struct {
 	packagePath string
+	packageDoc  string
 	version     string
 	symbols     *symbolSet
 }
@@ -53,7 +54,11 @@ func NewAPI(packagePath, version string, files []*ast.File) (*API, error) {
 		return nil, err
 	}
 	syms := newSymbolSet()
+	var docComments []string
 	for _, file := range files {
+		if text := cleanDoc(file.Doc); text != "" {
+			docComments = append(docComments, text)
+		}
 		for _, decl := range file.Decls {
 			switch decl := decl.(type) {
 			case *ast.FuncDecl:
@@ -61,21 +66,20 @@ func NewAPI(packagePath, version string, files []*ast.File) (*API, error) {
 				if decl.Recv != nil || !decl.Name.IsExported() {
 					continue
 				}
-				// TODO: get doc comment.
-				syms.add(decl.Name.Name, "", token.FUNC, newFuncType(decl.Type))
+				syms.add(decl.Name.Name, cleanDoc(decl.Doc), token.FUNC, newFuncType(decl.Type))
 			case *ast.GenDecl:
 				switch decl.Tok {
 				case token.CONST, token.VAR:
 					for _, spec := range decl.Specs {
 						spec := spec.(*ast.ValueSpec)
+						doc := symbolDoc(decl.Doc, spec.Doc)
 						for i, name := range spec.Names {
 							if name.IsExported() {
 								var val ast.Expr
 								if i < len(spec.Values) {
 									val = spec.Values[i]
 								}
-								// TODO: get doc comment.
-								syms.add(name.Name, "", decl.Tok, newValueSpecType(decl.Tok, spec.Type, val, defs))
+								syms.add(name.Name, doc, decl.Tok, newValueSpecType(decl.Tok, spec.Type, val, defs))
 							}
 						}
 					}
@@ -84,11 +88,11 @@ func NewAPI(packagePath, version string, files []*ast.File) (*API, error) {
 					for _, spec := range decl.Specs {
 						spec := spec.(*ast.TypeSpec)
 						if spec.Name.IsExported() {
-							// TODO: get doc comment.
+							doc := symbolDoc(decl.Doc, spec.Doc)
 							if spec.Assign.IsValid() {
-								syms.add(spec.Name.Name, "", token.TYPE, newAliasType(spec, defs))
+								syms.add(spec.Name.Name, doc, token.TYPE, newAliasType(spec, defs))
 							} else {
-								syms.add(spec.Name.Name, "", token.TYPE, newNamedType(spec, defs))
+								syms.add(spec.Name.Name, doc, token.TYPE, newNamedType(spec, defs))
 							}
 						}
 					}
@@ -98,6 +102,7 @@ func NewAPI(packagePath, version string, files []*ast.File) (*API, error) {
 	}
 	return &API{
 		packagePath: packagePath,
+		packageDoc:  strings.Join(docComments, "\n\n"),
 		version:     version,
 		symbols:     syms,
 	}, nil
