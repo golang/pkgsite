@@ -36,6 +36,7 @@ import (
 	"golang.org/x/pkgsite/internal/memory"
 	"golang.org/x/pkgsite/internal/middleware/stats"
 	"golang.org/x/pkgsite/internal/queue"
+	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
 	"golang.org/x/pkgsite/internal/vuln"
 )
@@ -185,11 +186,10 @@ type Cacher interface {
 // cache.
 func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authValues []string) {
 	var (
-		detailHandler    http.Handler = s.errorHandler(s.serveDetails)
-		fetchHandler     http.Handler
-		searchHandler    http.Handler = s.errorHandler(s.serveSearch)
-		vulnHandler      http.Handler = s.errorHandler(s.serveVuln)
-		apiSearchHandler http.Handler = s.apiHandler(api.ServeSearch)
+		detailHandler http.Handler = s.errorHandler(s.serveDetails)
+		fetchHandler  http.Handler
+		searchHandler http.Handler = s.errorHandler(s.serveSearch)
+		vulnHandler   http.Handler = s.errorHandler(s.serveVuln)
 	)
 	if s.fetchServer != nil {
 		fetchHandler = s.errorHandler(s.fetchServer.ServeFetch)
@@ -202,9 +202,13 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 		detailHandler = cacher.Cache("details", detailsTTL, authValues)(detailHandler)
 		searchHandler = cacher.Cache("search", searchTTL, authValues)(searchHandler)
 		vulnHandler = cacher.Cache("vuln", vulnTTL, authValues)(vulnHandler)
-		// TODO: Shorten the Redis TTL for non-symbol API package searches to
-		// defaultTTL (10m) once downstream CDN caching is enabled.
-		apiSearchHandler = apiCacheHeaders(cacher.Cache("api-search", searchTTL, authValues)(apiSearchHandler))
+	}
+	cacheAPI := func(name string, ttl func(*http.Request) time.Duration, f func(http.ResponseWriter, *http.Request, internal.DataSource) error) http.Handler {
+		var h http.Handler = s.apiHandler(f)
+		if cacher != nil {
+			h = apiCacheHeaders(cacher.Cache(name, ttl, authValues)(h))
+		}
+		return h
 	}
 	// Advertise the /v1/ API in a Link header. This must wrap the cached
 	// handlers above, because the cache replays only response bodies. Local
@@ -253,14 +257,16 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	handle("GET /golang.org/x", s.staticPageHandler("subrepo", "Sub-repositories"))
 	handle("GET /files/", http.StripPrefix("/files", s.fileMux))
 	handle("GET /vuln/", vulnHandler)
-	handle("GET /v1/package/", s.apiHandler(api.ServePackage))
-	handle("GET /v1/symbols/", s.apiHandler(api.ServePackageSymbols))
-	handle("GET /v1/imported-by/", s.apiHandler(api.ServePackageImportedBy))
-	handle("GET /v1/module/", s.apiHandler(api.ServeModule))
-	handle("GET /v1/versions/", s.apiHandler(api.ServeModuleVersions))
-	handle("GET /v1/packages/", s.apiHandler(api.ServeModulePackages))
-	handle("GET /v1/search", apiSearchHandler)
-	handle("GET /v1/vulns/", s.apiHandler(api.ServeVulnerabilities(s.vulnClient)))
+	handle("GET /v1/package/", cacheAPI("api-details", apiDetailsTTL, api.ServePackage))
+	handle("GET /v1/symbols/", cacheAPI("api-details", apiDetailsTTL, api.ServePackageSymbols))
+	handle("GET /v1/imported-by/", cacheAPI("api-details", apiDetailsTTL, api.ServePackageImportedBy))
+	handle("GET /v1/module/", cacheAPI("api-details", apiDetailsTTL, api.ServeModule))
+	handle("GET /v1/versions/", cacheAPI("api-details", apiDetailsTTL, api.ServeModuleVersions))
+	handle("GET /v1/packages/", cacheAPI("api-details", apiDetailsTTL, api.ServeModulePackages))
+	// TODO: Shorten the Redis TTL for non-symbol API package searches to
+	// defaultTTL (10m) once downstream CDN caching is enabled.
+	handle("GET /v1/search", cacheAPI("api-search", searchTTL, api.ServeSearch))
+	handle("GET /v1/vulns/", cacheAPI("api-vuln", vulnTTL, api.ServeVulnerabilities(s.vulnClient)))
 	handle("GET /v1/api", s.apiDocHandler())
 	apiRedirect := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/api", http.StatusFound)
@@ -417,15 +423,46 @@ var crawlers = []string{
 	"+http://ahrefs.com/robot",
 }
 
-// detailsTTL assigns the cache TTL for package detail requests.
-func detailsTTL(r *http.Request) time.Duration {
+// isCrawler reports whether r was sent by a known web crawler.
+func isCrawler(r *http.Request) bool {
 	userAgent := r.Header.Get("User-Agent")
 	for _, c := range crawlers {
 		if strings.Contains(userAgent, c) {
-			return tinyTTL
+			return true
 		}
 	}
+	return false
+}
+
+// detailsTTL assigns the cache TTL for package detail requests.
+func detailsTTL(r *http.Request) time.Duration {
+	if isCrawler(r) {
+		return tinyTTL
+	}
 	return detailsTTLForPath(r.Context(), r.URL.Path, r.FormValue("tab"))
+}
+
+// apiDetailsTTL assigns the cache TTL for /v1/ package and module detail requests.
+func apiDetailsTTL(r *http.Request) time.Duration {
+	if isCrawler(r) {
+		return tinyTTL
+	}
+	if isImmutableAPIVersion(r) {
+		return longTTL
+	}
+	return shortTTL
+}
+
+// isImmutableAPIVersion reports whether r targets a /v1/ endpoint whose
+// response is immutable for the requested version query parameter.
+func isImmutableAPIVersion(r *http.Request) bool {
+	if strings.HasPrefix(r.URL.Path, "/v1/search") ||
+		strings.HasPrefix(r.URL.Path, "/v1/versions/") ||
+		strings.HasPrefix(r.URL.Path, "/v1/imported-by/") {
+		return false
+	}
+	v := r.URL.Query().Get("version")
+	return !(v == "" || v == version.Latest || internal.DefaultBranches[v] || stdlib.SupportedBranches[v])
 }
 
 func detailsTTLForPath(ctx context.Context, urlPath, tab string) time.Duration {
@@ -496,7 +533,11 @@ func vulnTTL(r *http.Request) time.Duration {
 func apiCacheHeaders(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Cache-Control", "public, max-age=3600")
+		if isImmutableAPIVersion(r) {
+			w.Header().Set("Cache-Control", "public, max-age=10800")
+		} else {
+			w.Header().Set("Cache-Control", "public, max-age=3600")
+		}
 		h.ServeHTTP(w, r)
 	})
 }

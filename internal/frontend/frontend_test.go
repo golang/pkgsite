@@ -103,6 +103,39 @@ func TestDetailsTTL(t *testing.T) {
 	}
 }
 
+func TestAPIDetailsTTL(t *testing.T) {
+	tests := []struct {
+		r    *http.Request
+		want time.Duration
+	}{
+		{mustRequest("/v1/package/host.com/module?version=v1.2.3", t), longTTL},
+		{mustRequest("/v1/module/host.com/module?version=v1.2.3", t), longTTL},
+		{mustRequest("/v1/symbols/host.com/module?version=v1.2.3", t), longTTL},
+		{mustRequest("/v1/packages/host.com/module?version=v1.2.3", t), longTTL},
+		{mustRequest("/v1/package/host.com/module?version=latest", t), shortTTL},
+		{mustRequest("/v1/package/host.com/module?version=master", t), shortTTL},
+		{mustRequest("/v1/package/host.com/module?version=main", t), shortTTL},
+		{mustRequest("/v1/package/net/http?version=dev.boringcrypto", t), shortTTL},
+		{mustRequest("/v1/package/host.com/module", t), shortTTL},
+		{mustRequest("/v1/versions/host.com/module?version=v1.2.3", t), shortTTL},
+		{mustRequest("/v1/imported-by/host.com/module?version=v1.2.3", t), shortTTL},
+		{
+			func() *http.Request {
+				r := mustRequest("/v1/package/host.com/module?version=v1.2.3", t)
+				r.Header.Set("user-agent",
+					"Mozilla/5.0 (compatible; AhrefsBot/7.0; +http://ahrefs.com/robot/)")
+				return r
+			}(),
+			tinyTTL,
+		},
+	}
+	for _, test := range tests {
+		if got := apiDetailsTTL(test.r); got != test.want {
+			t.Errorf("apiDetailsTTL(%v) = %v, want %v", test.r, got, test.want)
+		}
+	}
+}
+
 func TestSearchTTL(t *testing.T) {
 	tests := []struct {
 		path string
@@ -144,7 +177,7 @@ func (fc fakeCacher) Cache(string, func(*http.Request) time.Duration, []string) 
 	}
 }
 
-func TestAPISearchCache(t *testing.T) {
+func TestAPICache(t *testing.T) {
 	cacher := make(fakeCacher)
 	_, handler := newTestServer(t, cacher)
 
@@ -170,6 +203,42 @@ func TestAPISearchCache(t *testing.T) {
 			if i == 1 && w.Body.String() != "cached" {
 				t.Errorf("got body %q, want %q", w.Body.String(), "cached")
 			}
+		}
+	})
+
+	t.Run("immutable version cache hit sets 3h Cache-Control", func(t *testing.T) {
+		cacher["/v1/package/foo?version=v1.2.3"] = []byte("cached-pkg")
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, httptest.NewRequest("GET", "/v1/package/foo?version=v1.2.3", nil))
+		if got, want := w.Code, http.StatusOK; got != want {
+			t.Fatalf("got status %d, want %d", got, want)
+		}
+		if got, want := w.Header().Get("Content-Type"), "application/json"; got != want {
+			t.Errorf("got Content-Type %q, want %q", got, want)
+		}
+		if got, want := w.Header().Get("Cache-Control"), "public, max-age=10800"; got != want {
+			t.Errorf("got Cache-Control %q, want %q", got, want)
+		}
+		if got, want := w.Body.String(), "cached-pkg"; got != want {
+			t.Errorf("got body %q, want %q", got, want)
+		}
+	})
+
+	t.Run("mutable endpoint with version param cache hit sets 1h Cache-Control", func(t *testing.T) {
+		cacher["/v1/imported-by/foo?version=v1.2.3"] = []byte("cached-importers")
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, httptest.NewRequest("GET", "/v1/imported-by/foo?version=v1.2.3", nil))
+		if got, want := w.Code, http.StatusOK; got != want {
+			t.Fatalf("got status %d, want %d", got, want)
+		}
+		if got, want := w.Header().Get("Content-Type"), "application/json"; got != want {
+			t.Errorf("got Content-Type %q, want %q", got, want)
+		}
+		if got, want := w.Header().Get("Cache-Control"), "public, max-age=3600"; got != want {
+			t.Errorf("got Cache-Control %q, want %q", got, want)
+		}
+		if got, want := w.Body.String(), "cached-importers"; got != want {
+			t.Errorf("got body %q, want %q", got, want)
 		}
 	})
 
