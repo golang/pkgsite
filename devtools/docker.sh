@@ -14,6 +14,10 @@ if [[ -z $GO_VERSION ]]; then
 fi
 export GO_VERSION
 
+if [[ -n "$GO_BUILDER_NAME" ]]; then
+  export GO_DISCOVERY_POSTGRES_FSYNC=off
+fi
+
 
 docker_cleanup() {
   if [ "$GO_DISCOVERY_DOCKER_SKIP_CLEANUP" = "true" ]; then

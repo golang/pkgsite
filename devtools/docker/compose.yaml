@@ -109,6 +109,14 @@ services:
     working_dir: /pkgsite
   db:
     image: docker.io/pgvector/pgvector:pg14
+    command:
+      - postgres
+      - -c
+      - fsync=${GO_DISCOVERY_POSTGRES_FSYNC:-on}
+      - -c
+      - synchronous_commit=${GO_DISCOVERY_POSTGRES_FSYNC:-on}
+      - -c
+      - full_page_writes=${GO_DISCOVERY_POSTGRES_FSYNC:-on}
     environment:
       <<: *database-variables
       LANG: C
