@@ -63,16 +63,30 @@ if ! command -v docker > /dev/null && command -v podman > /dev/null; then
     fi
   }
   # Work around bugs in podman-compose < 1.0.6 (Debian 12 ships 1.0.3):
-  # 'down' lacks --remove-orphans, and 'run' without --no-deps starts all
-  # services in compose.yaml when the target service has no dependencies.
+  # 'down' lacks --remove-orphans, 'run' without --no-deps starts all services
+  # in compose.yaml when the target service has no dependencies, and 'run'
+  # prints 'exit code: N' on its last line instead of exiting non-zero.
   if ! command podman-compose down --help 2>&1 | grep -q -- --remove-orphans; then
     podman-compose() {
-      local args=()
+      local args=() is_run=false
       for arg in "$@"; do
         [[ "$arg" == "--remove-orphans" ]] && continue
         args+=("$arg")
-        [[ "$arg" == "run" && " $* " =~ \ (go|nodejs)\  ]] && args+=("--no-deps")
+        if [[ "$is_run" == false && "$arg" == "run" ]]; then
+          is_run=true
+          [[ " $* " =~ \ (go|nodejs)\  ]] && args+=("--no-deps")
+        fi
       done
+      if $is_run; then
+        local out status=0
+        out=$(mktemp)
+        trap 'rm -f "$out"' RETURN
+        if ! (set -o pipefail; command podman-compose "${args[@]}" | tee "$out") ||
+           [[ $(grep -E '^exit code: [0-9]+' "$out" | tr -d '\r' | tail -n 1) != "exit code: 0" ]]; then
+          status=1
+        fi
+        return $status
+      fi
       command podman-compose "${args[@]}"
     }
   fi
