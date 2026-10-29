@@ -47,7 +47,7 @@ var (
 func newTestServerWithFetch(t *testing.T, proxyModules []*proxytest.Module, cacher frontend.Cacher) (*frontend.Server, *FetchServer, http.Handler, func()) {
 	t.Helper()
 	proxyClient, teardown := proxytest.SetupTestClient(t, proxyModules)
-	sourceClient := source.NewClient(http.DefaultClient)
+	sourceClient := source.NewClientForTesting()
 	ctx := context.Background()
 
 	q := inmemqueue.New(ctx, 1, nil,

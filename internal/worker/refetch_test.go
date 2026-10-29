@@ -7,7 +7,6 @@ package worker
 import (
 	"context"
 	"errors"
-	"net/http"
 	"testing"
 	"time"
 
@@ -60,7 +59,7 @@ func TestReFetch(t *testing.T) {
 		},
 	})
 	defer teardownProxy()
-	sourceClient := source.NewClient(http.DefaultClient)
+	sourceClient := source.NewClientForTesting()
 	f := &Fetcher{proxyClient, sourceClient, testDB, nil, ""}
 	if _, _, err := f.FetchAndUpdateState(ctx, sample.ModulePath, version, testAppVersion); err != nil {
 		t.Fatalf("FetchAndUpdateState(%q, %q): %v", sample.ModulePath, version, err)

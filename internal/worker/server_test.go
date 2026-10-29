@@ -34,12 +34,10 @@ import (
 
 var (
 	testDB      *postgres.DB
-	httpClient  *http.Client
 	testModules []*proxytest.Module
 )
 
 func TestMain(m *testing.M) {
-	httpClient = &http.Client{Transport: fakeTransport{}}
 	dochtml.LoadTemplates(template.TrustedFSFromTrustedSource(template.TrustedSourceFromConstant("../../static")))
 	testModules = proxytest.LoadTestModules("../proxy/testdata")
 	postgres.RunDBTests("discovery_worker_test", m, &testDB)
@@ -178,7 +176,7 @@ func TestWorker(t *testing.T) {
 			proxyClient, teardownProxy := proxytest.SetupTestClient(t, test.proxy)
 			defer teardownProxy()
 			defer postgres.ResetTestDB(testDB, t)
-			f := &Fetcher{proxyClient, source.NewClient(http.DefaultClient), testDB, nil, ""}
+			f := &Fetcher{proxyClient, source.NewClientForTesting(), testDB, nil, ""}
 
 			// Use 10 workers to have parallelism consistent with the worker binary.
 			q := inmemqueue.New(ctx, 10, nil, func(ctx context.Context, mpath, version string) (int, error) {
@@ -342,12 +340,6 @@ func TestShouldDisableProxyFetch(t *testing.T) {
 		}
 
 	}
-}
-
-type fakeTransport struct{}
-
-func (fakeTransport) RoundTrip(*http.Request) (*http.Response, error) {
-	return nil, errors.New("bad")
 }
 
 func TestSyncEmbeddings(t *testing.T) {

@@ -7,7 +7,6 @@ package worker
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"sort"
 	"strings"
 	"testing"
@@ -194,7 +193,7 @@ func TestFetchAndUpdateState(t *testing.T) {
 		},
 	}
 
-	sourceClient := source.NewClient(http.DefaultClient)
+	sourceClient := source.NewClientForTesting()
 	for _, test := range testCases {
 		t.Run(strings.ReplaceAll(test.pkg+"@"+test.version, "/", " "), func(t *testing.T) {
 			defer postgres.ResetTestDB(testDB, t)
@@ -298,7 +297,7 @@ func TestFetchAndUpdateStateCacheZip(t *testing.T) {
 	defer teardownProxy()
 
 	// With a plain proxy, we download the zip twice.
-	f := &Fetcher{proxyClient, source.NewClient(http.DefaultClient), testDB, nil, ""}
+	f := &Fetcher{proxyClient, source.NewClientForTesting(), testDB, nil, ""}
 	if _, _, err := f.FetchAndUpdateState(ctx, "m.com", "v1.0.0", testAppVersion); err != nil {
 		t.Fatal(err)
 	}
@@ -327,7 +326,7 @@ func TestFetchAndUpdateLatest(t *testing.T) {
 	const modulePath = "example.com/retractions"
 	f := &Fetcher{
 		ProxyClient:  prox,
-		SourceClient: source.NewClient(http.DefaultClient),
+		SourceClient: source.NewClientForTesting(),
 		DB:           testDB,
 	}
 	got, err := f.FetchAndUpdateLatest(ctx, modulePath)
@@ -367,7 +366,7 @@ func TestFetchGo121(t *testing.T) {
 	})
 	defer teardownProxy()
 
-	sourceClient := source.NewClient(http.DefaultClient)
+	sourceClient := source.NewClientForTesting()
 	f := &Fetcher{proxyClient, sourceClient, testDB, nil, ""}
 	got, _, err := f.FetchAndUpdateState(context.Background(), modulePath, version, testAppVersion)
 	if err != nil {
