@@ -41,16 +41,18 @@ func main() {
 
 	start := time.Now()
 	for {
-		if time.Since(start) > *timeout {
-			break
-		}
-		if conn, err := net.DialTimeout("tcp", hostport, 1*time.Second); err != nil {
-			time.Sleep(1 * time.Second)
-			continue
-		} else {
+		conn, err := net.DialTimeout("tcp", hostport, 1*time.Second)
+		if err == nil {
 			conn.Close()
 			break
 		}
+		if time.Since(start) > *timeout {
+			log.Fatalf(ctx, "timed out after %v waiting for %s: %v", *timeout, hostport, err)
+		}
+		time.Sleep(1 * time.Second)
+	}
+	if len(command) == 0 {
+		return
 	}
 	var err error
 	binpath := command[0]
@@ -60,10 +62,7 @@ func main() {
 			log.Fatalf(ctx, "looking up err: %v", err)
 		}
 	}
-	if len(command) > 0 {
-		err := syscall.Exec(binpath, command, os.Environ())
-		if err != nil {
-			log.Fatalf(ctx, "exec-ing binary: %v", err)
-		}
+	if err := syscall.Exec(binpath, command, os.Environ()); err != nil {
+		log.Fatalf(ctx, "exec-ing binary: %v", err)
 	}
 }
