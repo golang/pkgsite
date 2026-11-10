@@ -190,6 +190,11 @@ func ResetDB(ctx context.Context, db *DB) error {
 		if _, err := tx.Exec(ctx, `TRUNCATE module_version_states CASCADE;`); err != nil {
 			return err
 		}
+		if _, err := tx.Exec(ctx, `
+			TRUNCATE module_download_states CASCADE;
+			REFRESH MATERIALIZED VIEW module_downloads_30d;`); err != nil {
+			return err
+		}
 		if _, err := tx.Exec(ctx, `TRUNCATE excluded_prefixes;`); err != nil {
 			return err
 		}
