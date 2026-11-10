@@ -1,0 +1,4 @@
+module,version,mod_count,zip_count,mod_unique_ips,zip_unique_ips
+example.com/a,v1.0.0,20,100,5,10
+example.com/b,v1.0.0,10,50,2,5
+example.com/b,,10,50,2,5
