@@ -16,6 +16,13 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 )
 
+// MinDownloadDate is the earliest date for which download counts are collected.
+// It is a var for testing.
+var MinDownloadDate = civil.Date{Year: 2025, Month: 11, Day: 1}
+
+// failureRetryAge is the minimum age of a failed download state before it is retried.
+const failureRetryAge = 48 * time.Hour
+
 // DownloadInfo holds daily download and unique IP counts for a module.
 type DownloadInfo struct {
 	ModulePath string
@@ -44,6 +51,64 @@ func (db *DB) UpsertModuleDownloadState(ctx context.Context, date civil.Date, st
 			updated_at = CURRENT_TIMESTAMP
 	`
 	_, err = db.db.Exec(ctx, query, date.In(time.UTC), status, statusErr)
+	return err
+}
+
+// UpdateableDownloadDates returns the slice of dates eligible for download ingestion,
+// ordered from most recent to oldest: all dates from MinDownloadDate through yesterday
+// (today - 1 day) that are either missing from module_download_states or failed
+// (status != 200) with updated_at older than failureRetryAge.
+// It returns a derrors.InvalidArgument error if today is invalid.
+func (db *DB) UpdateableDownloadDates(ctx context.Context, today civil.Date) (_ []civil.Date, err error) {
+	defer derrors.WrapStack(&err, "UpdateableDownloadDates(ctx, %s)", today)
+
+	if !today.IsValid() {
+		return nil, fmt.Errorf("invalid date %s: %w", today, derrors.InvalidArgument)
+	}
+
+	const query = `
+		SELECT d::date AS date
+		FROM generate_series(
+			$1::date,
+			($2::date - INTERVAL '1 day')::date,
+			INTERVAL '1 day'
+		) AS d
+		LEFT JOIN module_download_states s ON s.date = d::date
+		WHERE s.date IS NULL
+		   OR (s.status != 200 AND s.updated_at < CURRENT_TIMESTAMP - make_interval(secs => $3))
+		ORDER BY d DESC
+	`
+	return database.Collect1[civil.Date](ctx, db.db, query, MinDownloadDate.In(time.UTC), today.In(time.UTC), failureRetryAge.Seconds())
+}
+
+// LatestDownloadDate returns the most recent date with status 200 in
+// module_download_states, and reports whether one exists.
+func (db *DB) LatestDownloadDate(ctx context.Context) (_ civil.Date, _ bool, err error) {
+	defer derrors.WrapStack(&err, "LatestDownloadDate(ctx)")
+
+	var d civil.Date
+	err = db.db.QueryRow(ctx, `
+		SELECT date
+		FROM module_download_states
+		WHERE status = 200
+		ORDER BY date DESC
+		LIMIT 1
+	`).Scan(&d)
+	switch err {
+	case nil:
+		return d, true, nil
+	case sql.ErrNoRows:
+		return civil.Date{}, false, nil
+	default:
+		return civil.Date{}, false, err
+	}
+}
+
+// UpdateModuleDownloads30d refreshes the module_downloads_30d materialized view concurrently.
+func (db *DB) UpdateModuleDownloads30d(ctx context.Context) (err error) {
+	defer derrors.WrapStack(&err, "UpdateModuleDownloads30d(ctx)")
+
+	_, err = db.db.Exec(ctx, `REFRESH MATERIALIZED VIEW CONCURRENTLY module_downloads_30d`)
 	return err
 }
 

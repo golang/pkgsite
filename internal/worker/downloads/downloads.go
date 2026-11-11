@@ -14,14 +14,108 @@ import (
 	"io"
 	"io/fs"
 	"iter"
+	"net/http"
 	"path"
 	"slices"
 	"strconv"
 	"strings"
 
 	"cloud.google.com/go/civil"
+	"golang.org/x/pkgsite/internal/derrors"
+	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
 )
+
+// maxDatesPerRun caps the number of dates processed in a single updateDownloadInfo call.
+const maxDatesPerRun = 10
+
+// updateDownloadInfo processes up to maxDatesPerRun updateable download dates,
+// starting with the most recent.
+func updateDownloadInfo(ctx context.Context, db *postgres.DB, fsys fs.FS, today civil.Date) (err error) {
+	defer derrors.Wrap(&err, "updateDownloadInfo(ctx, db, fsys, %s)", today)
+
+	dates, err := db.UpdateableDownloadDates(ctx, today)
+	if err != nil {
+		return err
+	}
+	if len(dates) > maxDatesPerRun {
+		dates = dates[:maxDatesPerRun]
+	}
+	var (
+		errs       []error
+		maxUpdated civil.Date
+	)
+	for _, d := range dates {
+		if err := ctx.Err(); err != nil {
+			return errors.Join(append(errs, err)...)
+		}
+		if err := updateDownloadInfoForDate(ctx, db, fsys, d); err != nil {
+			errs = append(errs, err)
+			if ctx.Err() != nil {
+				return errors.Join(errs...)
+			}
+		} else if maxUpdated.IsZero() || d.After(maxUpdated) {
+			maxUpdated = d
+		}
+	}
+	// Refresh the 30-day materialized view if any updated date falls in the
+	// 30-day window ending at the latest successful date.
+	if !maxUpdated.IsZero() {
+		if err := ctx.Err(); err != nil {
+			return errors.Join(append(errs, err)...)
+		}
+		latest, ok, err := db.LatestDownloadDate(ctx)
+		if err != nil {
+			errs = append(errs, err)
+		} else if ok && !maxUpdated.Before(latest.AddDays(-29)) {
+			if err := db.UpdateModuleDownloads30d(ctx); err != nil {
+				errs = append(errs, err)
+			}
+		}
+	}
+	return errors.Join(errs...)
+}
+
+// updateDownloadInfoForDate reads download counts for date from fsys, writes them
+// to the module_downloads table, and updates the module_download_states table.
+func updateDownloadInfoForDate(ctx context.Context, db *postgres.DB, fsys fs.FS, date civil.Date) (err error) {
+	defer derrors.Wrap(&err, "updateDownloadInfoForDate(ctx, db, fsys, %s)", date)
+
+	log.Infof(ctx, "updating download info for %s", date)
+
+	run := func() (int, error) {
+		infos, err := readDownloadInfo(ctx, fsys, date)
+		if err != nil {
+			if errors.Is(err, fs.ErrNotExist) {
+				return http.StatusNotFound, err
+			}
+			return derrors.ToStatus(err), err
+		}
+		if len(infos) == 0 {
+			return http.StatusNotFound, errors.New("no download records")
+		}
+		if err := db.UpsertModuleDownloads(ctx, infos); err != nil {
+			return derrors.ToStatus(err), err
+		}
+		return http.StatusOK, nil
+	}
+
+	status, runErr := run()
+	// If the context was canceled, don't write a failure state (which would delay
+	// retries) or attempt a DB call with an already-canceled context.
+	if err := ctx.Err(); err != nil {
+		if runErr != nil {
+			return runErr
+		}
+		return err
+	}
+	var errMsg string
+	if runErr != nil {
+		errMsg = runErr.Error()
+	}
+	stateErr := db.UpsertModuleDownloadState(ctx, date, status, errMsg)
+	return errors.Join(runErr, stateErr)
+}
 
 // readDownloadInfo reads all CSV shards in fsys for date and returns the
 // resulting DownloadInfo slice sorted by ModulePath.
