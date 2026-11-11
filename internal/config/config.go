@@ -112,6 +112,10 @@ type Config struct {
 	// dynamic exclusion file.
 	DynamicExcludeLocation string
 
+	// DownloadsLocation is the location (gs://bucket/prefix) for
+	// module download count files.
+	DownloadsLocation string
+
 	// ServeStats determines whether the server has an endpoint that serves statistics for
 	// benchmarking or other purposes.
 	ServeStats bool

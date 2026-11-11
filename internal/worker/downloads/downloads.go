@@ -19,12 +19,45 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 
 	"cloud.google.com/go/civil"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/worker/downloads/gcsfs"
 )
+
+// Update processes all updateable download dates up to yesterday.
+func Update(ctx context.Context, db *postgres.DB, gcsURL string) (err error) {
+	defer derrors.Wrap(&err, "downloads.Update(ctx, db, %q)", gcsURL)
+
+	rest, ok := strings.CutPrefix(gcsURL, "gs://")
+	if !ok {
+		return fmt.Errorf("bad GCS URL %q: must start with gs://", gcsURL)
+	}
+	bucket, prefix, _ := strings.Cut(rest, "/")
+	if bucket == "" {
+		return fmt.Errorf("bad GCS URL %q: missing bucket", gcsURL)
+	}
+	gfs, err := gcsfs.New(ctx, bucket)
+	if err != nil {
+		return err
+	}
+	defer gfs.Close()
+
+	var fsys fs.FS = gfs
+	prefix = strings.Trim(prefix, "/")
+	if prefix != "" {
+		fsys, err = fs.Sub(gfs, prefix)
+		if err != nil {
+			return err
+		}
+	}
+
+	today := civil.DateOf(time.Now().UTC())
+	return updateDownloadInfo(ctx, db, fsys, today)
+}
 
 // maxDatesPerRun caps the number of dates processed in a single updateDownloadInfo call.
 const maxDatesPerRun = 10

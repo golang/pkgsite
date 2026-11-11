@@ -14,10 +14,12 @@ import (
 	"strings"
 	"testing"
 	"testing/fstest"
+	"time"
 
 	"cloud.google.com/go/civil"
 	"github.com/google/go-cmp/cmp"
 	"golang.org/x/pkgsite/internal/postgres"
+	"golang.org/x/pkgsite/internal/worker/downloads/fakestorage"
 )
 
 var testDB *postgres.DB
@@ -518,6 +520,39 @@ func TestUpdateDownloadInfoOldBackfillSkipsRefresh(t *testing.T) {
 	}
 	if got := readDBDownloads30d(t); len(got) != 0 {
 		t.Errorf("module_downloads_30d unexpectedly refreshed: got %v, want empty", got)
+	}
+}
+
+func TestUpdate(t *testing.T) {
+	ctx := t.Context()
+	defer postgres.ResetTestDB(testDB, t)
+
+	today := civil.DateOf(time.Now().UTC())
+	yesterday := today.AddDays(-1)
+	twoDaysAgo := today.AddDays(-2)
+
+	// Seed MinDownloadDate through twoDaysAgo as succeeded so only yesterday is eligible.
+	seedSucceededRange(t, postgres.MinDownloadDate, twoDaysAgo)
+
+	memFS := fstest.MapFS{
+		"sub/dir/date=" + yesterday.String() + "/counts-00000-of-00001.csv": &fstest.MapFile{
+			Data: []byte(validHeader + "example.com/a,v1.0.0,10,123,2,45\n"),
+		},
+	}
+	srv := fakestorage.NewServer("my-bucket", memFS)
+	defer srv.Close()
+	t.Setenv("STORAGE_EMULATOR_HOST", srv.URL)
+
+	if err := Update(ctx, testDB, "gs://my-bucket/sub/dir"); err != nil {
+		t.Fatal(err)
+	}
+
+	gotInfos := readDBDownloads(t)
+	wantInfos := []postgres.DownloadInfo{
+		{ModulePath: "example.com/a", Date: yesterday, Downloads: 123, UniqueIPs: 45},
+	}
+	if diff := cmp.Diff(wantInfos, gotInfos); diff != "" {
+		t.Errorf("module_downloads mismatch (-want +got):\n%s", diff)
 	}
 }
 

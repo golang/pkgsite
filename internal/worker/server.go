@@ -44,6 +44,7 @@ import (
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
 	"golang.org/x/pkgsite/internal/version"
+	"golang.org/x/pkgsite/internal/worker/downloads"
 )
 
 // Server can be installed to serve the go discovery worker.
@@ -161,6 +162,11 @@ func (s *Server) Install(handle func(string, http.Handler)) {
 	// or imported_by_count_updated_at < version_updated_at.
 	// This endpoint is intended to be invoked periodically by a scheduler.
 	handle("/update-imported-by-count", rmw(s.errorHandler(s.handleUpdateImportedByCount)))
+
+	// scheduled: update-download-info updates module_downloads with daily
+	// download counts for dates that have not yet succeeded.
+	// This endpoint is intended to be invoked periodically by a scheduler.
+	handle("/update-download-info", rmw(s.errorHandler(s.handleUpdateDownloadInfo)))
 
 	// scheduled: sync-embeddings generates embeddings for packages that need them.
 	// This endpoint is intended to be invoked periodically by a scheduler.
@@ -296,6 +302,15 @@ func (s *Server) handleUpdateImportedByCount(w http.ResponseWriter, r *http.Requ
 		return err
 	}
 	fmt.Fprintf(w, "updated %d packages, %d modules", np, nm)
+	return nil
+}
+
+// handleUpdateDownloadInfo updates module download counts.
+func (s *Server) handleUpdateDownloadInfo(w http.ResponseWriter, r *http.Request) error {
+	if err := downloads.Update(r.Context(), s.db, s.cfg.DownloadsLocation); err != nil {
+		return err
+	}
+	fmt.Fprint(w, "updated download info")
 	return nil
 }
 

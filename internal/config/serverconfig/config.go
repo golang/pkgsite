@@ -194,6 +194,7 @@ func Init(ctx context.Context) (_ *config.Config, err error) {
 		DisableTemporaryBanner: os.Getenv("GO_DISCOVERY_DISABLE_TEMPORARY_BANNER") == "true",
 		EnableVectorSearch:     os.Getenv("GO_DISCOVERY_ENABLE_VECTOR_SEARCH") == "true",
 		VulnDB:                 GetEnv("GO_DISCOVERY_VULN_DB", "https://storage.googleapis.com/go-vulndb"),
+		DownloadsLocation:      os.Getenv("GO_DISCOVERY_DOWNLOADS_LOCATION"),
 	}
 	log.SetLevel(cfg.LogLevel)
 
