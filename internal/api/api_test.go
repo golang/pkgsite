@@ -13,6 +13,8 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/osv"
@@ -113,36 +115,78 @@ func TestServeVulnerabilities(t *testing.T) {
 	insertModule("v1.0.0")
 	insertModule("v1.2.0")
 
+	vuln1 := Vulnerability{ID: "VULN-1", Details: "Vulnerability 1"}
+	vuln2 := Vulnerability{ID: "VULN-2", Details: "Vulnerability 2"}
+	vuln3 := Vulnerability{ID: "VULN-3", Details: "Vulnerability 3"}
+
 	for _, test := range []struct {
 		name       string
 		url        string
 		wantStatus int
-		wantCount  int
-		want       any
+		want       []Vulnerability
 	}{
 		{
 			name:       "all vulns",
 			url:        "/v1/vulns/example.com?version=v1.0.0",
 			wantStatus: http.StatusOK,
-			wantCount:  3,
+			want:       []Vulnerability{vuln1, vuln2, vuln3},
 		},
 		{
 			name:       "no vulns",
 			url:        "/v1/vulns/example.com?version=v1.2.0",
 			wantStatus: http.StatusOK,
-			wantCount:  0,
 		},
 		{
 			name:       "package path in vulns endpoint",
 			url:        "/v1/vulns/example.com/pkg?version=v1.0.0",
 			wantStatus: http.StatusOK,
-			wantCount:  2,
+			want:       []Vulnerability{vuln1, vuln2},
 		},
 		{
 			name:       "another package path",
 			url:        "/v1/vulns/example.com/other?version=v1.0.0",
 			wantStatus: http.StatusOK,
-			wantCount:  2,
+			want:       []Vulnerability{vuln1, vuln3},
+		},
+		{
+			name:       "filter by id",
+			url:        `/v1/vulns/example.com?version=v1.0.0&filter=id=="VULN-1"`,
+			wantStatus: http.StatusOK,
+			want:       []Vulnerability{vuln1},
+		},
+		{
+			name:       "filter by details",
+			url:        `/v1/vulns/example.com?version=v1.0.0&filter=contains(details,"2")`,
+			wantStatus: http.StatusOK,
+			want:       []Vulnerability{vuln2},
+		},
+		// Summary and FixedVersion are currently unpopulated, so filters see "".
+		{
+			name:       "filter by summary empty",
+			url:        `/v1/vulns/example.com?version=v1.0.0&filter=summary==""`,
+			wantStatus: http.StatusOK,
+			want:       []Vulnerability{vuln1, vuln2, vuln3},
+		},
+		{
+			name:       "filter by summary non-empty",
+			url:        `/v1/vulns/example.com?version=v1.0.0&filter=summary!=""`,
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:       "filter by fixedVersion empty",
+			url:        `/v1/vulns/example.com?version=v1.0.0&filter=fixedVersion==""`,
+			wantStatus: http.StatusOK,
+			want:       []Vulnerability{vuln1, vuln2, vuln3},
+		},
+		{
+			name:       "filter by fixedVersion non-empty",
+			url:        `/v1/vulns/example.com?version=v1.0.0&filter=fixedVersion!=""`,
+			wantStatus: http.StatusOK,
+		},
+		{
+			name:       "filter by Go field name fails",
+			url:        `/v1/vulns/example.com?version=v1.0.0&filter=ID=="VULN-1"`,
+			wantStatus: http.StatusBadRequest,
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -154,7 +198,7 @@ func TestServeVulnerabilities(t *testing.T) {
 			}
 
 			if w.Code != test.wantStatus {
-				t.Errorf("status = %d, want %d", w.Code, test.wantStatus)
+				t.Fatalf("status = %d, want %d; body = %s", w.Code, test.wantStatus, w.Body.String())
 			}
 
 			if test.wantStatus == http.StatusOK {
@@ -162,8 +206,11 @@ func TestServeVulnerabilities(t *testing.T) {
 				if err := json.Unmarshal(w.Body.Bytes(), &got); err != nil {
 					t.Fatalf("json.Unmarshal: %v", err)
 				}
-				if len(got.Items) != test.wantCount {
-					t.Errorf("count = %d, want %d", len(got.Items), test.wantCount)
+				if diff := cmp.Diff(test.want, got.Items, cmpopts.EquateEmpty()); diff != "" {
+					t.Errorf("items mismatch (-want +got):\n%s", diff)
+				}
+				if got.Total != len(test.want) {
+					t.Errorf("total = %d, want %d", got.Total, len(test.want))
 				}
 			}
 		})

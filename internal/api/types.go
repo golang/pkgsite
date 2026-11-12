@@ -140,9 +140,11 @@ type SearchResult struct {
 
 // Vulnerability is a vulnerability in /v1/vulns/{modulePath}.
 type Vulnerability struct {
-	ID           string `json:"id"`
-	Summary      string `json:"summary"`
-	Details      string `json:"details"`
+	ID string `json:"id"`
+	// Summary is not populated.
+	Summary string `json:"summary"`
+	Details string `json:"details"`
+	// FixedVersion is not populated.
 	FixedVersion string `json:"fixedVersion"`
 }
 

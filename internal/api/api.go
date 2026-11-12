@@ -687,6 +687,7 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 // api:desc Vulnerabilities of the module or package at {path}.
 // api:desc Data comes from the Go vulnerability database (https://vuln.go.dev).
 // api:desc Only results that match the filter query parameter are returned.
+// api:desc The only fields
 // api:example /v1/vulns/golang.org/x/image
 func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.Request, _ internal.DataSource) error {
 	return func(w http.ResponseWriter, r *http.Request, ds internal.DataSource) (err error) {
@@ -726,12 +727,8 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 
 		// Use VulnsForPackage from internal/vuln to get vulnerabilities.
 		// If pkgPath is non-empty, it filters vulnerabilities to only that package.
+		// TODO: Populate more fields from the osv.Entry?
 		vulns := vuln.VulnsForPackage(r.Context(), um.ModulePath, um.Version, pkgPath, vc)
-
-		vulns, err = filterStruct(vulns, params.Filter)
-		if err != nil {
-			return err
-		}
 
 		var items []Vulnerability
 		for _, v := range vulns {
@@ -739,6 +736,11 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 				ID:      v.ID,
 				Details: v.Details,
 			})
+		}
+
+		items, err = filterStruct(items, params.Filter)
+		if err != nil {
+			return err
 		}
 
 		// api:response PaginatedResponse[Vulnerability]

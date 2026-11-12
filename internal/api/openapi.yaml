@@ -632,7 +632,7 @@
     },
     "/vulns/{path}": {
       "get": {
-        "description": "Vulnerabilities of the module or package at {path}.\nData comes from the Go vulnerability database (https://vuln.go.dev).\nOnly results that match the filter query parameter are returned.",
+        "description": "Vulnerabilities of the module or package at {path}.\nData comes from the Go vulnerability database (https://vuln.go.dev).\nOnly results that match the filter query parameter are returned.\nThe only fields",
         "operationId": "getVulns",
         "parameters": [
           {
@@ -1148,12 +1148,14 @@
             "type": "string"
           },
           "fixedVersion": {
+            "description": "FixedVersion is not populated.",
             "type": "string"
           },
           "id": {
             "type": "string"
           },
           "summary": {
+            "description": "Summary is not populated.",
             "type": "string"
           }
         },
