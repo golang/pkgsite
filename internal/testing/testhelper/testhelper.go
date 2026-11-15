@@ -128,7 +128,17 @@ func CreateTestDirectory(files map[string]string) (_ string, err error) {
 	return tempDir, nil
 }
 
-func writeTestDirectory(tempDir string, files map[string]string) error {
+func writeTestDirectory(tempDir string, files map[string]string) (err error) {
+	writeFile := func(path, contents string) error {
+		file, err := os.Create(path)
+		if err != nil {
+			return err
+		}
+		defer derrors.Cleanup(&err, file.Close)
+		_, err = file.WriteString(contents)
+		return err
+	}
+
 	for path, contents := range files {
 		path = filepath.Join(tempDir, path)
 
@@ -137,14 +147,7 @@ func writeTestDirectory(tempDir string, files map[string]string) error {
 			return err
 		}
 
-		file, err := os.Create(path)
-		if err != nil {
-			return err
-		}
-		if _, err := file.WriteString(contents); err != nil {
-			return err
-		}
-		if err := file.Close(); err != nil {
+		if err := writeFile(path, contents); err != nil {
 			return err
 		}
 	}

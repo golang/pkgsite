@@ -289,6 +289,22 @@ func writeFeatures(features []string, pkgPath, ver, outDir string) (err error) {
 
 func writeZip(r *zip.Reader, destination string) (err error) {
 	defer derrors.Wrap(&err, "writeZip(r, %q)", destination)
+
+	copyFile := func(dst string, src *zip.File) (err error) {
+		dstf, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, src.Mode())
+		if err != nil {
+			return err
+		}
+		defer derrors.Cleanup(&err, dstf.Close)
+		srcf, err := src.Open()
+		if err != nil {
+			return err
+		}
+		defer srcf.Close()
+		_, err = io.Copy(dstf, srcf)
+		return err
+	}
+
 	for _, f := range r.File {
 		fpath := filepath.Join(destination, f.Name)
 		if !strings.HasPrefix(fpath, filepath.Clean(destination)+string(os.PathSeparator)) {
@@ -301,21 +317,7 @@ func writeZip(r *zip.Reader, destination string) (err error) {
 		if err := os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
 			return err
 		}
-		outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-		if err != nil {
-			return err
-		}
-		rc, err := f.Open()
-		if err != nil {
-			return err
-		}
-		if _, err := io.Copy(outFile, rc); err != nil {
-			return err
-		}
-		if err := outFile.Close(); err != nil {
-			return err
-		}
-		if err := rc.Close(); err != nil {
+		if err := copyFile(fpath, f); err != nil {
 			return err
 		}
 	}

@@ -307,3 +307,17 @@ func Report(err error) {
 		reporter.Report(err, nil, nil)
 	}
 }
+
+// Cleanup invokes f.
+// It sets *errp to the join of *errp and the error returned from f.
+//
+// Example:
+//
+//	func F(...) (err error) {
+//	    ...
+//	    fileToWrite, err := os.Create(path)
+//	    if err != nil { ... }
+//	    defer Cleanup(&err, fileToWrite.Close)
+func Cleanup(errp *error, f func() error) {
+	*errp = errors.Join(*errp, f())
+}

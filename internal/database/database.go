@@ -414,16 +414,24 @@ func (db *DB) bulkInsert(ctx context.Context, table string, columns, returningCo
 		return db.Prepare(ctx, buildInsertQuery(table, columns, returningColumns, n, conflictAction))
 	}
 
+	// Insert the values one chunk at a time, left to right.
+	// The defers inside the loop are suspicious, but in fact this loop
+	// constructs at most two statements, and defer is called once on each.
 	var stmt *sql.Stmt
 	for leftBound := 0; leftBound < len(values); leftBound += stride {
 		rightBound := leftBound + stride
 		if rightBound <= len(values) && stmt == nil {
+			// Construct a statement for the full stride of values.
+			// This is the common case: it will happen every time through the loop
+			// except possibly the last. But we only construct the statement once,
+			// because of the "stmt == nil" above.
 			stmt, err = prepare(stride)
 			if err != nil {
 				return err
 			}
 			defer stmt.Close()
 		} else if rightBound > len(values) {
+			// This case happens at most once, on the last iteration.
 			rightBound = len(values)
 			stmt, err = prepare(rightBound - leftBound)
 			if err != nil {
