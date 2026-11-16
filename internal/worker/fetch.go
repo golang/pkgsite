@@ -27,6 +27,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/experiment"
 	"golang.org/x/pkgsite/internal/fetch"
+	"golang.org/x/pkgsite/internal/licenses/licensedetect"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/log/stackdriverlogger"
 	"golang.org/x/pkgsite/internal/postgres"
@@ -321,7 +322,7 @@ func (f *Fetcher) fetchAndInsertModule(ctx context.Context, modulePath, requeste
 	var wg sync.WaitGroup
 	wg.Go(func() {
 		start := time.Now()
-		fr := fetch.FetchModule(ctx, modulePath, requestedVersion, moduleGetter)
+		fr := fetch.FetchModule(ctx, modulePath, requestedVersion, moduleGetter, licensedetect.Detect)
 		if fr == nil {
 			panic("fetch.FetchModule should never return a nil FetchResult")
 		}

@@ -85,18 +85,18 @@ func cleanFetchResult(t *testing.T, fr *FetchResult) *FetchResult {
 	return fr
 }
 
-func cleanLicenses(t *testing.T, fr *FetchResult, detector *licensedetect.Detector) *FetchResult {
+func cleanLicenses(ctx context.Context, t *testing.T, fr *FetchResult, detector *licensedetect.Detector) *FetchResult {
 	fr.Module.Licenses = nil
 	for _, u := range fr.Module.Units {
 		u.Licenses = nil
 	}
 
-	allLicenses := detector.AllLicenses()
+	allLicenses := detector.AllLicenses(ctx)
 	if len(allLicenses) > 0 {
 		fr.Module.Licenses = allLicenses
 		fr.Module.IsRedistributable = true
 		for _, d := range fr.Module.Units {
-			isRedist, lics := detector.PackageInfo(internal.Suffix(d.Path, fr.ModulePath))
+			isRedist, lics := detector.PackageInfo(ctx, internal.Suffix(d.Path, fr.ModulePath))
 			for _, l := range lics {
 				d.Licenses = append(d.Licenses, l.Metadata)
 			}
@@ -152,7 +152,7 @@ func proxyFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 		Files:      mod.Files,
 	}})
 	defer teardownProxy()
-	got := FetchModule(ctx, modulePath, fetchVersion, NewProxyModuleGetter(proxyClient, source.NewClientForTesting()))
+	got := FetchModule(ctx, modulePath, fetchVersion, NewProxyModuleGetter(proxyClient, source.NewClientForTesting()), licensedetect.Detect)
 	if !withLicenseDetector {
 		return got, nil
 	}
@@ -178,14 +178,12 @@ func localFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 	if err != nil {
 		t.Fatal(err)
 	}
-	got := FetchModule(ctx, modulePath, LocalVersion, g)
+	got := FetchModule(ctx, modulePath, LocalVersion, g, licensedetect.Detect)
 	if !withLicenseDetector {
 		return got, nil
 	}
 
-	d := licensedetect.NewDetectorFS(modulePath, LocalVersion, os.DirFS(directory), func(format string, args ...any) {
-		log.Infof(ctx, format, args...)
-	})
+	d := licensedetect.NewDetectorFS(ctx, modulePath, LocalVersion, os.DirFS(directory), log.Infof)
 	return got, d
 }
 
@@ -203,7 +201,7 @@ func stdlibZipFetcher(t *testing.T, withLicenseDetector bool, ctx context.Contex
 		fetchVersion = version
 	}
 
-	got := FetchModule(ctx, modulePath, fetchVersion, NewStdlibZipModuleGetter())
+	got := FetchModule(ctx, modulePath, fetchVersion, NewStdlibZipModuleGetter(), licensedetect.Detect)
 	if !withLicenseDetector {
 		return got, nil
 	}
@@ -213,9 +211,7 @@ func stdlibZipFetcher(t *testing.T, withLicenseDetector bool, ctx context.Contex
 		t.Fatal(err)
 	}
 
-	d := licensedetect.NewDetectorFS(modulePath, fetchVersion, fs, func(format string, args ...any) {
-		log.Infof(ctx, format, args...)
-	})
+	d := licensedetect.NewDetectorFS(ctx, modulePath, fetchVersion, fs, log.Infof)
 	return got, d
 }
 
@@ -240,10 +236,7 @@ func licenseDetector(ctx context.Context, t *testing.T, modulePath, version stri
 			t.Fatal(err)
 		}
 	}
-	logf := func(format string, args ...any) {
-		log.Infof(ctx, format, args...)
-	}
-	return licensedetect.NewDetectorFS(modulePath, version, contentDir, logf)
+	return licensedetect.NewDetectorFS(ctx, modulePath, version, contentDir, log.Infof)
 }
 
 func sortFetchResult(fr *FetchResult) {

@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -24,6 +25,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
+	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/licenses/licensedetect"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/source"
@@ -128,7 +130,7 @@ func TestFetchModule(t *testing.T) {
 					if got.Error != nil {
 						t.Fatalf("fetching failed: %v", got.Error)
 					}
-					test.mod.fr = cleanLicenses(t, test.mod.fr, d)
+					test.mod.fr = cleanLicenses(ctx, t, test.mod.fr, d)
 					fr := updateFetchResultVersions(t, test.mod.fr, fetcher.name == "local")
 					sortFetchResult(fr)
 					sortFetchResult(got)
@@ -291,5 +293,41 @@ func TestExtractDeprecatedComment(t *testing.T) {
 		if gotHas != test.wantHas || gotComment != test.wantComment {
 			t.Errorf("%s: got (%t, %q), want(%t, %q)", test.name, gotHas, gotComment, test.wantHas, test.wantComment)
 		}
+	}
+}
+
+func TestNilLicenseDetector(t *testing.T) {
+	ctx := t.Context()
+	proxyClient, teardownProxy := proxytest.SetupTestClient(t, testModules)
+	defer teardownProxy()
+	mg := NewProxyModuleGetter(proxyClient, source.NewClientForTesting())
+
+	for _, test := range []struct {
+		name   string
+		detect licenses.DetectorFunc
+	}{
+		{"nil func", nil},
+		{"nil detector", func(context.Context, string, string, fs.FS) licenses.Detector { return nil }},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			fr := FetchModule(ctx, "example.com/basic", "v1.0.0", mg, test.detect)
+			if fr.Error != nil {
+				t.Fatalf("FetchModule failed: %v", fr.Error)
+			}
+			if fr.Module.IsRedistributable {
+				t.Error("Module.IsRedistributable = true, want false")
+			}
+			if fr.Module.Licenses != nil {
+				t.Errorf("Module.Licenses = %v, want nil", fr.Module.Licenses)
+			}
+			for _, u := range fr.Module.Units {
+				if u.IsRedistributable {
+					t.Errorf("Unit(%q).IsRedistributable = true, want false", u.Path)
+				}
+				if u.Licenses != nil {
+					t.Errorf("Unit(%q).Licenses = %v, want nil", u.Path, u.Licenses)
+				}
+			}
+		})
 	}
 }

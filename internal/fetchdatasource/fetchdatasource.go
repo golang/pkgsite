@@ -21,6 +21,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/fetch"
+	"golang.org/x/pkgsite/internal/licenses/licensedetect"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/lru"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -145,7 +146,7 @@ func (ds *FetchDataSource) fetch(ctx context.Context, modulePath, version string
 		log.Infof(ctx, "FetchDataSource: fetched %s@%s using %T in %s with error %v", modulePath, version, g, time.Since(start), err)
 	}()
 	for _, g := range ds.opts.Getters {
-		m := fetch.FetchLazyModule(ctx, modulePath, version, g)
+		m := fetch.FetchLazyModule(ctx, modulePath, version, g, licensedetect.Detect)
 		if m.Error == nil {
 			if ds.opts.BypassLicenseCheck {
 				m.IsRedistributable = true

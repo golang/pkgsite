@@ -5,29 +5,33 @@
 package fetch
 
 import (
+	"context"
 	"path"
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/licenses"
-	"golang.org/x/pkgsite/internal/licenses/licensedetect"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
 // moduleUnit returns the requested unit in a given module, along
 // with the contents for the unit.
-func moduleUnit(modulePath string, unitMeta *internal.UnitMeta,
+func moduleUnit(ctx context.Context, modulePath string, unitMeta *internal.UnitMeta,
 	pkg *goPackage,
 	readme *internal.Readme,
-	d *licensedetect.Detector) *internal.Unit {
+	d licenses.Detector) *internal.Unit {
 
 	suffix := internal.Suffix(unitMeta.Path, modulePath)
 	if modulePath == stdlib.ModulePath {
 		suffix = unitMeta.Path
 	}
-	isRedist, lics := d.PackageInfo(suffix)
+	var isRedist bool
 	var meta []*licenses.Metadata
-	for _, l := range lics {
-		meta = append(meta, l.Metadata)
+	if d != nil {
+		var lics []*licenses.License
+		isRedist, lics = d.PackageInfo(ctx, suffix)
+		for _, l := range lics {
+			meta = append(meta, l.Metadata)
+		}
 	}
 	unit := &internal.Unit{
 		UnitMeta:          *unitMeta,

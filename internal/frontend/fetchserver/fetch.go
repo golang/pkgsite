@@ -26,6 +26,7 @@ import (
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/frontend/serrors"
 	"golang.org/x/pkgsite/internal/frontend/urlinfo"
+	"golang.org/x/pkgsite/internal/licenses/licensedetect"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/queue"
@@ -560,7 +561,7 @@ func FetchAndUpdateState(ctx context.Context, modulePath, requestedVersion strin
 		derrors.Wrap(&err, "FetchAndUpdateState(%q, %q)", modulePath, requestedVersion)
 	}()
 
-	fr := fetch.FetchModule(ctx, modulePath, requestedVersion, fetch.NewProxyModuleGetter(proxyClient, sourceClient))
+	fr := fetch.FetchModule(ctx, modulePath, requestedVersion, fetch.NewProxyModuleGetter(proxyClient, sourceClient), licensedetect.Detect)
 	if fr.Error == nil {
 		// Only attempt to insert the module into module_version_states if the
 		// fetch process was successful.

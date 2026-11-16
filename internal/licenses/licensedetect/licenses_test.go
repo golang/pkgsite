@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
-	"log"
 	"math"
 	"os"
 	"path"
@@ -23,6 +22,7 @@ import (
 	"github.com/google/go-cmp/cmp/cmpopts"
 	lc "github.com/google/licensecheck"
 	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/log"
 )
 
 const (
@@ -297,8 +297,8 @@ func TestModuleIsRedistributable(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			d := NewDetector(test.module, test.version, zr, nil)
-			got := d.ModuleIsRedistributable()
+			d := NewDetector(t.Context(), test.module, test.version, zr, nil)
+			got := d.ModuleIsRedistributable(t.Context())
 			if got != test.want {
 				for _, l := range d.ModuleLicenses() {
 					t.Logf("%v %+v", l.Types, l.Coverage)
@@ -306,7 +306,7 @@ func TestModuleIsRedistributable(t *testing.T) {
 				t.Fatalf("got %t, want %t", got, test.want)
 			}
 			var gotMetas []*licenses.Metadata
-			for _, lic := range d.AllLicenses() {
+			for _, lic := range d.AllLicenses(t.Context()) {
 				gotMetas = append(gotMetas, lic.Metadata)
 			}
 			opts := []cmp.Option{
@@ -365,8 +365,8 @@ func TestPaths(t *testing.T) {
 		},
 	} {
 		t.Run(fmt.Sprintf("which=%d", test.which), func(t *testing.T) {
-			d := NewDetector("m", "v1", zr, nil)
-			got := d.paths(test.which)
+			d := NewDetector(t.Context(), "m", "v1", zr, nil)
+			got := d.paths(t.Context(), test.which)
 			if diff := cmp.Diff(test.want, got,
 				cmpopts.SortSlices(func(a, b string) bool { return a < b })); diff != "" {
 				t.Errorf("mismatch(-want, +got):\n%s", diff)
@@ -391,7 +391,7 @@ func TestDetectFile(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			got, _ := DetectFile(data, test.file, nil)
+			got, _ := DetectFile(t.Context(), data, test.file, nil)
 			if !cmp.Equal(got, test.want) {
 				t.Errorf("got %v, want %v", got, test.want)
 			}
@@ -534,9 +534,9 @@ func TestDetectFiles(t *testing.T) {
 	}
 	for _, test := range testCases {
 		t.Run(test.name, func(t *testing.T) {
-			d := NewDetector("m", "v1", newZipReader(t, "m@v1", test.contents), log.Printf)
-			paths := d.paths(AllFiles)
-			gotLics := d.detectFiles(paths)
+			d := NewDetector(t.Context(), "m", "v1", newZipReader(t, "m@v1", test.contents), log.Infof)
+			paths := d.paths(t.Context(), AllFiles)
+			gotLics := d.detectFiles(t.Context(), paths)
 			sort.Slice(gotLics, func(i, j int) bool {
 				return gotLics[i].FilePath < gotLics[j].FilePath
 			})
@@ -645,8 +645,8 @@ func TestPackageInfo(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			zr := newZipReader(t, module+"@"+version, test.contents)
-			d := NewDetector(module, version, zr, nil)
-			gotRedist, gotLics := d.PackageInfo("dir/pkg")
+			d := NewDetector(t.Context(), module, version, zr, nil)
+			gotRedist, gotLics := d.PackageInfo(t.Context(), "dir/pkg")
 			if gotRedist != test.wantRedist {
 				t.Errorf("redist: got %t, want %t", gotRedist, test.wantRedist)
 			}
@@ -672,12 +672,12 @@ func TestInvalidContentDirPath(t *testing.T) {
 		t.Fatalf("%q is valid", invalidPath)
 	}
 	zr := newZipReader(t, invalidPath, map[string]string{"a": "b"})
-	d := NewDetector("a", "v1.0.0", zr, nil)
+	d := NewDetector(t.Context(), "a", "v1.0.0", zr, nil)
 	got := d.ModuleLicenses()
 	if len(got) != 0 {
 		t.Errorf("got %v, want nothing", got)
 	}
-	got = d.AllLicenses()
+	got = d.AllLicenses(t.Context())
 	if len(got) != 0 {
 		t.Errorf("got %v, want nothing", got)
 	}

@@ -17,7 +17,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc"
-	"golang.org/x/pkgsite/internal/licenses/licensedetect"
+	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -51,7 +51,7 @@ type LazyModule struct {
 	goModPath        string
 	requestedVersion string
 	failedPackages   []*internal.PackageVersionState
-	licenseDetector  *licensedetect.Detector
+	licenseDetector  licenses.Detector
 	contentDir       fs.FS
 	godocModInfo     *godoc.ModuleInfo
 	Error            error
@@ -62,23 +62,23 @@ type LazyModule struct {
 // *internal.Module and related information.
 //
 // Even if err is non-nil, the result may contain useful information, like the go.mod path.
-func FetchModule(ctx context.Context, modulePath, requestedVersion string, mg ModuleGetter) (fr *FetchResult) {
-	lm := FetchLazyModule(ctx, modulePath, requestedVersion, mg)
+func FetchModule(ctx context.Context, modulePath, requestedVersion string, mg ModuleGetter, detectLicenses licenses.DetectorFunc) (fr *FetchResult) {
+	lm := FetchLazyModule(ctx, modulePath, requestedVersion, mg, detectLicenses)
 	return lm.fetchResult(ctx)
 }
 
 // FetchLazyModule queries the proxy or the Go repo for the requested module
 // version, downloads the module zip, and does just enough processing to produce
 // UnitMetas for all the modules. The full units are computed as needed.
-func FetchLazyModule(ctx context.Context, modulePath, requestedVersion string, mg ModuleGetter) *LazyModule {
-	lm, err := fetchLazyModule(ctx, modulePath, requestedVersion, mg)
+func FetchLazyModule(ctx context.Context, modulePath, requestedVersion string, mg ModuleGetter, detectLicenses licenses.DetectorFunc) *LazyModule {
+	lm, err := fetchLazyModule(ctx, modulePath, requestedVersion, mg, detectLicenses)
 	if err != nil {
 		lm.Error = err
 	}
 	return lm
 }
 
-func fetchLazyModule(ctx context.Context, modulePath, requestedVersion string, mg ModuleGetter) (*LazyModule, error) {
+func fetchLazyModule(ctx context.Context, modulePath, requestedVersion string, mg ModuleGetter, detectLicenses licenses.DetectorFunc) (*LazyModule, error) {
 	lm := &LazyModule{
 		requestedVersion: requestedVersion,
 	}
@@ -157,11 +157,12 @@ func fetchLazyModule(ctx context.Context, modulePath, requestedVersion string, m
 	if err != nil {
 		log.Infof(ctx, "error getting source info: %v", err)
 	}
-	logf := func(format string, args ...any) {
-		log.Infof(ctx, format, args...)
+	if detectLicenses != nil {
+		lm.licenseDetector = detectLicenses(ctx, modulePath, v, contentDir)
+		if lm.licenseDetector != nil {
+			lm.ModuleInfo.IsRedistributable = lm.licenseDetector.ModuleIsRedistributable(ctx)
+		}
 	}
-	lm.licenseDetector = licensedetect.NewDetectorFS(modulePath, v, contentDir, logf)
-	lm.ModuleInfo.IsRedistributable = lm.licenseDetector.ModuleIsRedistributable()
 	lm.UnitMetas, lm.godocModInfo, lm.failedPackages, err = extractUnitMetas(ctx, lm.ModuleInfo, contentDir)
 	if err != nil {
 		return lm, err
@@ -199,7 +200,7 @@ func (lm *LazyModule) unit(ctx context.Context, unitMeta *internal.UnitMeta) (*i
 	}
 	// This unit represents the module itself, not a package.
 	if !unitMeta.IsPackage() {
-		return moduleUnit(lm.ModulePath, unitMeta, nil, readme, lm.licenseDetector), nil, nil
+		return moduleUnit(ctx, lm.ModulePath, unitMeta, nil, readme, lm.licenseDetector), nil, nil
 	}
 	pkg, pvs, err := extractPackage(ctx, lm.ModulePath, unitMeta.Path, lm.contentDir, lm.licenseDetector, lm.SourceInfo, lm.godocModInfo)
 	if err != nil || (pvs != nil && pvs.Status != 200) {
@@ -207,7 +208,7 @@ func (lm *LazyModule) unit(ctx context.Context, unitMeta *internal.UnitMeta) (*i
 		return nil, pvs, err
 	}
 
-	u := moduleUnit(lm.ModulePath, unitMeta, pkg, readme, lm.licenseDetector)
+	u := moduleUnit(ctx, lm.ModulePath, unitMeta, pkg, readme, lm.licenseDetector)
 	return u, pvs, nil
 }
 
@@ -230,7 +231,9 @@ func (lm *LazyModule) fetchResult(ctx context.Context) *FetchResult {
 		}
 		return fr
 	}
-	fr.Module.Licenses = lm.licenseDetector.AllLicenses()
+	if lm.licenseDetector != nil {
+		fr.Module.Licenses = lm.licenseDetector.AllLicenses(ctx)
+	}
 	// We need to set HasGoMod here rather than on the ModuleInfo when
 	// it's created because the ModuleInfo that goes on the units shouldn't
 	// have HasGoMod set on it.

@@ -20,6 +20,7 @@ import (
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/frontend/fetchserver"
+	"golang.org/x/pkgsite/internal/licenses/licensedetect"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
@@ -111,7 +112,7 @@ func processVersions(ctx context.Context, t *testing.T, testModules []*proxytest
 
 func fetchAndInsertModule(ctx context.Context, t *testing.T, tm *proxytest.Module, proxyClient *proxy.Client) {
 	sourceClient := source.NewClientForTesting()
-	res := fetch.FetchModule(ctx, tm.ModulePath, tm.Version, fetch.NewProxyModuleGetter(proxyClient, sourceClient))
+	res := fetch.FetchModule(ctx, tm.ModulePath, tm.Version, fetch.NewProxyModuleGetter(proxyClient, sourceClient), licensedetect.Detect)
 	if res.Error != nil {
 		t.Fatal(res.Error)
 	}

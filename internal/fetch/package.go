@@ -20,7 +20,6 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/licenses"
-	"golang.org/x/pkgsite/internal/licenses/licensedetect"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -59,7 +58,7 @@ func rel(pkgPath, modulePath string) string {
 // It returns a packageVersionState representing the status of doing the work
 // of computing the package after the UnitMeta was computed. The packageVersionState
 // of a package that failed to have a UnitMeta produced was produced by extractPackageMetas.
-func extractPackage(ctx context.Context, modulePath, pkgPath string, contentDir fs.FS, d *licensedetect.Detector, sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (*goPackage, *internal.PackageVersionState, error) {
+func extractPackage(ctx context.Context, modulePath, pkgPath string, contentDir fs.FS, d licenses.Detector, sourceInfo *source.Info, modInfo *godoc.ModuleInfo) (*goPackage, *internal.PackageVersionState, error) {
 	innerPath := rel(pkgPath, modulePath)
 	f, err := contentDir.Open(innerPath)
 	if err != nil {
@@ -117,7 +116,7 @@ func extractPackage(ctx context.Context, modulePath, pkgPath string, contentDir 
 			return nil, nil, fmt.Errorf("bad package error for %s: %v", pkg.path, pkg.err)
 		}
 		if d != nil { //  should only be nil for tests
-			isRedist, lics := d.PackageInfo(innerPath)
+			isRedist, lics := d.PackageInfo(ctx, innerPath)
 			pkg.isRedistributable = isRedist
 			for _, l := range lics {
 				pkg.licenseMeta = append(pkg.licenseMeta, l.Metadata)

@@ -9,15 +9,15 @@
 //
 // Example (modproxy):
 //
-//	d := licensedetect.NewDetector(modulePath, version, zipReader, log.Infof)
-//	modRedist := d.ModuleIsRedistributable()
+//	d := licensedetect.NewDetector(ctx, modulePath, version, zipReader, log.Infof)
+//	modRedist := d.ModuleIsRedistributable(ctx)
 //
 // Example (discovery):
 //
-//	d := licensedetect.NewDetector(modulePath, version, zipReader, log.Infof)
-//	modRedist := d.ModuleIsRedistributable()
-//	lics := d.AllLicenses()
-//	pkgRedist, pkgMetas := d.PackageInfo(pkgSubdir)
+//	d := licensedetect.NewDetector(ctx, modulePath, version, zipReader, log.Infof)
+//	modRedist := d.ModuleIsRedistributable(ctx)
+//	lics := d.AllLicenses(ctx)
+//	pkgRedist, pkgMetas := d.PackageInfo(ctx, pkgSubdir)
 package licensedetect
 
 import (
@@ -108,7 +108,7 @@ type Detector struct {
 	modulePath     string
 	version        string
 	fsys           fs.FS
-	logf           func(string, ...any)
+	logf           func(context.Context, string, ...any)
 	moduleRedist   bool
 	moduleLicenses []*licenses.License // licenses at module root directory, or list from exceptions
 	allLicenses    []*licenses.License
@@ -119,21 +119,21 @@ type Detector struct {
 // zr should be the zip file for that module and version.
 // logf is for logging; if nil, no logging is done.
 // Deprecated: use NewDetectorFS.
-func NewDetector(modulePath, version string, zr *zip.Reader, logf func(string, ...any)) *Detector {
+func NewDetector(ctx context.Context, modulePath, version string, zr *zip.Reader, logf func(context.Context, string, ...any)) *Detector {
 	sub, err := fs.Sub(zr, modulePath+"@"+version)
 	// This should only fail if the prefix is not a valid path, which shouldn't be possible.
 	if err != nil && logf != nil {
-		logf("fs.Sub: %v", err)
+		logf(ctx, "fs.Sub: %v", err)
 	}
-	return NewDetectorFS(modulePath, version, sub, logf)
+	return NewDetectorFS(ctx, modulePath, version, sub, logf)
 }
 
 // NewDetectorFS returns a Detector for the given module and version.
 // fsys should represent the content directory of the module (not the zip root).
 // logf is for logging; if nil, no logging is done.
-func NewDetectorFS(modulePath, version string, fsys fs.FS, logf func(string, ...any)) *Detector {
+func NewDetectorFS(ctx context.Context, modulePath, version string, fsys fs.FS, logf func(context.Context, string, ...any)) *Detector {
 	if logf == nil {
-		logf = func(string, ...any) {}
+		logf = func(context.Context, string, ...any) {}
 	}
 	d := &Detector{
 		modulePath: modulePath,
@@ -141,12 +141,12 @@ func NewDetectorFS(modulePath, version string, fsys fs.FS, logf func(string, ...
 		fsys:       fsys,
 		logf:       logf,
 	}
-	d.computeModuleInfo()
+	d.computeModuleInfo(ctx)
 	return d
 }
 
 // ModuleIsRedistributable reports whether the given module is redistributable.
-func (d *Detector) ModuleIsRedistributable() bool {
+func (d *Detector) ModuleIsRedistributable(_ context.Context) bool {
 	return d.moduleRedist
 }
 
@@ -157,9 +157,9 @@ func (d *Detector) ModuleLicenses() []*licenses.License {
 
 // AllLicenses returns all the licenses detected in the entire module, including
 // package licenses.
-func (d *Detector) AllLicenses() []*licenses.License {
+func (d *Detector) AllLicenses(ctx context.Context) []*licenses.License {
 	if d.allLicenses == nil {
-		d.computeAllLicenseInfo()
+		d.computeAllLicenseInfo(ctx)
 	}
 	return d.allLicenses
 }
@@ -167,13 +167,13 @@ func (d *Detector) AllLicenses() []*licenses.License {
 // PackageInfo reports whether the package at dir, a directory relative to the
 // module root, is redistributable. It also returns all the licenses that apply
 // to the package.
-func (d *Detector) PackageInfo(dir string) (isRedistributable bool, lics []*licenses.License) {
+func (d *Detector) PackageInfo(ctx context.Context, dir string) (isRedistributable bool, lics []*licenses.License) {
 	cleanDir := filepath.ToSlash(filepath.Clean(dir))
 	if path.IsAbs(cleanDir) || strings.HasPrefix(cleanDir, "..") {
 		return false, nil
 	}
 	if d.allLicenses == nil {
-		d.computeAllLicenseInfo()
+		d.computeAllLicenseInfo(ctx)
 	}
 	// Collect all the license metadata for directories dir and above, excluding the root.
 	for prefix, plics := range d.licsByDir {
@@ -188,26 +188,26 @@ func (d *Detector) PackageInfo(dir string) (isRedistributable bool, lics []*lice
 	// redistributable. A module that is granted an exception (see DetectFiles)
 	// may have licenses that are non-redistributable.
 	ltypes := types(lics)
-	isRedistributable = d.ModuleIsRedistributable() && (len(ltypes) == 0 || licenses.Redistributable(ltypes))
+	isRedistributable = d.ModuleIsRedistributable(ctx) && (len(ltypes) == 0 || licenses.Redistributable(ltypes))
 	// A package's licenses include the ones we've already computed, as well
 	// as the module licenses.
 	return isRedistributable, append(lics, d.moduleLicenses...)
 }
 
 // computeModuleInfo determines values for the moduleRedist and moduleLicenses fields of d.
-func (d *Detector) computeModuleInfo() {
+func (d *Detector) computeModuleInfo(ctx context.Context) {
 	// Check that all licenses in the contents directory are redistributable.
-	d.moduleLicenses = d.detectFiles(d.paths(RootFiles))
+	d.moduleLicenses = d.detectFiles(ctx, d.paths(ctx, RootFiles))
 	d.moduleRedist = licenses.Redistributable(types(d.moduleLicenses))
 }
 
 // computeAllLicenseInfo collects all the detected licenses in the zip and
 // stores them in the allLicenses field of d. It also maps detected licenses to
 // their directories, to optimize Detector.PackageInfo.
-func (d *Detector) computeAllLicenseInfo() {
+func (d *Detector) computeAllLicenseInfo(ctx context.Context) {
 	d.allLicenses = []*licenses.License{}
 	d.allLicenses = append(d.allLicenses, d.moduleLicenses...)
-	nonRootLicenses := d.detectFiles(d.paths(NonRootFiles))
+	nonRootLicenses := d.detectFiles(ctx, d.paths(ctx, NonRootFiles))
 	d.allLicenses = append(d.allLicenses, nonRootLicenses...)
 	d.licsByDir = map[string][]*licenses.License{}
 	for _, l := range nonRootLicenses {
@@ -231,7 +231,7 @@ const (
 // paths returns a list of license file paths from the Detector's filesystem.
 // The which argument determines the location of the files considered.
 // If paths encounters an error, it logs it and returns nil.
-func (d *Detector) paths(which WhichFiles) []string {
+func (d *Detector) paths(ctx context.Context, which WhichFiles) []string {
 	if d.fsys == nil {
 		return nil
 	}
@@ -264,14 +264,14 @@ func (d *Detector) paths(which WhichFiles) []string {
 		}
 		if err := module.CheckFilePath(pathname); err != nil {
 			// Skip if the file path is bad.
-			d.logf("module.CheckFilePath(%q): %v", pathname, err)
+			d.logf(ctx, "module.CheckFilePath(%q): %v", pathname, err)
 			return nil
 		}
 		paths = append(paths, pathname)
 		return nil
 	})
 	if err != nil {
-		d.logf("licenses.Detector.paths: %v", err)
+		d.logf(ctx, "licenses.Detector.paths: %v", err)
 		return nil
 	}
 	return paths
@@ -299,12 +299,12 @@ func isVendoredFile(name string) bool {
 // detectFiles runs DetectFile on each of the given files.
 // If a file cannot be read, the error is logged and a license
 // of type unknown is added.
-func (d *Detector) detectFiles(pathnames []string) []*licenses.License {
+func (d *Detector) detectFiles(ctx context.Context, pathnames []string) []*licenses.License {
 	var lics []*licenses.License
 	for _, p := range pathnames {
 		bytes, err := d.readFile(p)
 		if err != nil {
-			d.logf("reading file %s: %v", p, err)
+			d.logf(ctx, "reading file %s: %v", p, err)
 			lics = append(lics, &licenses.License{
 				Metadata: &licenses.Metadata{
 					Types:    []string{unknownLicenseType},
@@ -313,7 +313,7 @@ func (d *Detector) detectFiles(pathnames []string) []*licenses.License {
 			})
 			continue
 		}
-		types, cov := DetectFile(bytes, p, d.logf)
+		types, cov := DetectFile(ctx, bytes, p, d.logf)
 		lics = append(lics, &licenses.License{
 			Metadata: &licenses.Metadata{
 				Types:    types,
@@ -345,13 +345,13 @@ func (d *Detector) readFile(pathname string) ([]byte, error) {
 // DetectFile return the set of license types for the given file contents. It
 // also returns the licensecheck coverage information. The filename is used
 // solely for logging.
-func DetectFile(contents []byte, filename string, logf func(string, ...any)) ([]string, licenses.Coverage) {
+func DetectFile(ctx context.Context, contents []byte, filename string, logf func(context.Context, string, ...any)) ([]string, licenses.Coverage) {
 	if logf == nil {
-		logf = func(string, ...any) {}
+		logf = func(context.Context, string, ...any) {}
 	}
 	cov := fromLicensecheckCoverage(scanner().Scan(contents))
 	if cov.Percent < float64(coverageThreshold) {
-		logf("%s license coverage too low (%+v), skipping", filename, cov)
+		logf(ctx, "%s license coverage too low (%+v), skipping", filename, cov)
 		return []string{unknownLicenseType}, cov
 	}
 	types := make(map[string]bool)
@@ -365,7 +365,7 @@ func DetectFile(contents []byte, filename string, logf func(string, ...any)) ([]
 		}
 	}
 	if len(types) == 0 {
-		logf("%s failed to classify license (%+v), skipping", filename, cov)
+		logf(ctx, "%s failed to classify license (%+v), skipping", filename, cov)
 		return []string{unknownLicenseType}, cov
 	}
 	return slices.Sorted(maps.Keys(types)), cov
@@ -377,4 +377,9 @@ func types(lics []*licenses.License) []string {
 		types = append(types, l.Types...)
 	}
 	return types
+}
+
+// Detect constructs a licenses.Detector for the given module and version.
+func Detect(ctx context.Context, modulePath, version string, fsys fs.FS) licenses.Detector {
+	return NewDetectorFS(ctx, modulePath, version, fsys, log.Infof)
 }
