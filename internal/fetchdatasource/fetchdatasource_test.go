@@ -20,6 +20,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
+	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/licenses/licensedetect"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
@@ -112,6 +113,10 @@ func buildLocalGetters() ([]fetch.ModuleGetter, func()) {
 }
 
 func setup(t *testing.T, testModules []*proxytest.Module, bypassLicenseCheck bool) (context.Context, *FetchDataSource, func()) {
+	return setupWithDetector(t, testModules, bypassLicenseCheck, licensedetect.Detect)
+}
+
+func setupWithDetector(t *testing.T, testModules []*proxytest.Module, bypassLicenseCheck bool, detectLicenses licenses.DetectorFunc) (context.Context, *FetchDataSource, func()) {
 	t.Helper()
 	testenv.MustHaveExecPath(t, "go") // for the go packages module getter.
 	ctx, cancel := context.WithCancel(context.Background())
@@ -131,6 +136,7 @@ func setup(t *testing.T, testModules []*proxytest.Module, bypassLicenseCheck boo
 			Getters:              getters,
 			ProxyClientForLatest: client,
 			BypassLicenseCheck:   bypassLicenseCheck,
+			DetectLicenses:       detectLicenses,
 		}.New(), func() {
 			cleanup()
 			teardownProxy()
@@ -213,36 +219,45 @@ func TestProxyGetUnitMeta(t *testing.T) {
 }
 
 func TestBypass(t *testing.T) {
-	for _, bypass := range []bool{false, true} {
-		t.Run(fmt.Sprintf("bypass=%t", bypass), func(t *testing.T) {
-			// re-create the data source to get around caching
-			ctx, ds, teardown := setup(t, defaultTestModules, bypass)
-			defer teardown()
-			for _, test := range []struct {
-				path      string
-				wantEmpty bool
-			}{
-				{"example.com/basic", false},
-				{"example.com/nonredist/unk", !bypass},
-			} {
-				t.Run(test.path, func(t *testing.T) {
-					um, err := ds.GetUnitMeta(ctx, test.path, internal.UnknownModulePath, "v1.0.0")
-					if err != nil {
-						t.Fatal(err)
-					}
-					got, err := ds.GetUnit(ctx, um, internal.WithDocsSource, internal.BuildContext{})
-					if err != nil {
-						t.Fatal(err)
-					}
+	for _, withDetector := range []bool{true, false} {
+		for _, bypass := range []bool{false, true} {
+			t.Run(fmt.Sprintf("detector=%t/bypass=%t", withDetector, bypass), func(t *testing.T) {
+				var detect licenses.DetectorFunc
+				if withDetector {
+					detect = licensedetect.Detect
+				}
+				// re-create the data source to get around caching
+				ctx, ds, teardown := setupWithDetector(t, defaultTestModules, bypass, detect)
+				defer teardown()
+				for _, test := range []struct {
+					path      string
+					wantEmpty bool
+				}{
+					{"example.com/basic", !withDetector && !bypass},
+					{"example.com/nonredist/unk", !bypass},
+				} {
+					t.Run(test.path, func(t *testing.T) {
+						um, err := ds.GetUnitMeta(ctx, test.path, internal.UnknownModulePath, "v1.0.0")
+						if err != nil {
+							t.Fatal(err)
+						}
+						got, err := ds.GetUnit(ctx, um, internal.WithDocsSource, internal.BuildContext{})
+						if err != nil {
+							t.Fatal(err)
+						}
 
-					// Assume internal.Module.RemoveNonRedistributableData is correct; we just
-					// need to check one value to confirm that it was called.
-					if gotEmpty := (got.Documentation == nil); gotEmpty != test.wantEmpty {
-						t.Errorf("got empty %t, want %t", gotEmpty, test.wantEmpty)
-					}
-				})
-			}
-		})
+						// Assume internal.Module.RemoveNonRedistributableData is correct; we just
+						// need to check one value to confirm that it was called.
+						if gotEmpty := (got.Documentation == nil); gotEmpty != test.wantEmpty {
+							t.Errorf("got empty %t, want %t", gotEmpty, test.wantEmpty)
+						}
+						if !withDetector && got.Licenses != nil {
+							t.Errorf("got Licenses %v, want nil when DetectLicenses is nil", got.Licenses)
+						}
+					})
+				}
+			})
+		}
 	}
 }
 

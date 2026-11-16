@@ -27,6 +27,7 @@ import (
 	"golang.org/x/pkgsite/internal/fetchdatasource"
 	"golang.org/x/pkgsite/internal/frontend"
 	"golang.org/x/pkgsite/internal/frontend/fetchserver"
+	"golang.org/x/pkgsite/internal/licenses/licensedetect"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware"
 	"golang.org/x/pkgsite/internal/middleware/timeout"
@@ -107,6 +108,7 @@ func main() {
 			},
 			ProxyClientForLatest: proxyClient,
 			BypassLicenseCheck:   *bypassLicenseCheck,
+			DetectLicenses:       licensedetect.Detect,
 		}.New()
 		dsg = func(context.Context) internal.DataSource { return ds }
 	} else {

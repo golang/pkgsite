@@ -21,7 +21,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/fetch"
-	"golang.org/x/pkgsite/internal/licenses/licensedetect"
+	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/lru"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -44,6 +44,10 @@ type Options struct {
 	// include a ProxyModuleGetter in Getters.
 	ProxyClientForLatest *proxy.Client
 	BypassLicenseCheck   bool
+	// If set, this will be used to detect licenses. If nil, license detection
+	// is skipped and modules and units fail closed as non-redistributable
+	// unless BypassLicenseCheck is true.
+	DetectLicenses licenses.DetectorFunc
 }
 
 // New creates a new FetchDataSource from the options.
@@ -146,7 +150,7 @@ func (ds *FetchDataSource) fetch(ctx context.Context, modulePath, version string
 		log.Infof(ctx, "FetchDataSource: fetched %s@%s using %T in %s with error %v", modulePath, version, g, time.Since(start), err)
 	}()
 	for _, g := range ds.opts.Getters {
-		m := fetch.FetchLazyModule(ctx, modulePath, version, g, licensedetect.Detect)
+		m := fetch.FetchLazyModule(ctx, modulePath, version, g, ds.opts.DetectLicenses)
 		if m.Error == nil {
 			if ds.opts.BypassLicenseCheck {
 				m.IsRedistributable = true

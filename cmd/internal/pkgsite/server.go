@@ -23,6 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/fetchdatasource"
 	"golang.org/x/pkgsite/internal/frontend"
+	"golang.org/x/pkgsite/internal/licenses/licensedetect"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
@@ -280,6 +281,7 @@ func newServer(getters []fetch.ModuleGetter, localModules []frontend.LocalModule
 		Getters:              getters,
 		ProxyClientForLatest: prox,
 		BypassLicenseCheck:   true,
+		DetectLicenses:       licensedetect.Detect,
 	}.New()
 
 	// In dev mode, use a dirFS to pick up template/JS/CSS changes without
