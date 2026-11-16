@@ -429,6 +429,7 @@ func (db *DB) bulkInsert(ctx context.Context, table string, columns, returningCo
 			if err != nil {
 				return err
 			}
+			//gohawk:ignore deferinloop
 			defer stmt.Close()
 		} else if rightBound > len(values) {
 			// This case happens at most once, on the last iteration.
@@ -437,6 +438,7 @@ func (db *DB) bulkInsert(ctx context.Context, table string, columns, returningCo
 			if err != nil {
 				return err
 			}
+			//gohawk:ignore deferinloop
 			defer stmt.Close()
 		}
 		valueSlice := values[leftBound:rightBound]

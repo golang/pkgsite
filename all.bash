@@ -140,13 +140,19 @@ check_vet() {
 # check_staticcheck runs staticcheck on source files.
 check_staticcheck() {
   echo "staticcheck temporarily skipped: failing at tip"
-  #runcmd $GO tool staticcheck $(go list ./... | grep -v third_party | grep -v internal/doc | grep -v internal/render)
+  # runcmd $GO tool staticcheck $(go list ./... | grep -v third_party | grep -v internal/doc | grep -v internal/render)
+}
+
+# check_gohawk runs gohawk on source files.
+check_gohawk() {
+  runcmd $GO tool gohawk $(go list ./... | grep -v third_party | grep -v internal/doc)
 }
 
 # check_misspell runs misspell on source files.
 check_misspell() {
   runcmd $GO tool misspell cmd/**/*.{go,sh} internal/**/* README.md
 }
+
 
 # check_templates runs go-template-lint on template files. Unfortunately it
 # doesn't handler the /helpers/ fileglob correctly, so it is too noisy to be
@@ -212,6 +218,7 @@ go_linters() {
   check_staticcheck
   check_misspell
   check_unparam
+  check_gohawk
 }
 
 standard_linters() {
@@ -241,6 +248,7 @@ Available subcommands:
   script_hashes  - (lint) check script hashes
   script_output  - (lint) check script output
   staticcheck    - (lint) run staticcheck on source files
+  gohawk         - (lint) run gohawk on source files
   unparam        - (lint) run unparam on source files
   prettier       - (lint, nonstandard) run prettier on .js and .css files.
   templates      - (lint, nonstandard) run go-template-lint on templates
@@ -371,6 +379,7 @@ main() {
     migrations) check_bad_migrations ;;
     misspell) check_misspell ;;
     staticcheck) check_staticcheck ;;
+    gohawk) check_gohawk ;;
     prettier)
       shift
       run_prettier $*
