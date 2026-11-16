@@ -23,7 +23,7 @@ import (
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/fetchdatasource"
 	"golang.org/x/pkgsite/internal/frontend"
-	"golang.org/x/pkgsite/internal/licenses/licensedetect"
+	"golang.org/x/pkgsite/internal/licenses"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/source"
@@ -44,7 +44,8 @@ type ServerConfig struct {
 	GoRepoPath       string
 	GoDocMode        bool
 
-	Proxy *proxy.Client // client, or nil; controlled by the -proxy flag
+	Proxy          *proxy.Client // client, or nil; controlled by the -proxy flag
+	DetectLicenses licenses.DetectorFunc
 }
 
 // BuildServer builds a *frontend.Server using the given configuration.
@@ -115,7 +116,7 @@ func BuildServer(ctx context.Context, serverCfg ServerConfig) (*frontend.Server,
 		return allModules[i].ModulePath < allModules[j].ModulePath
 	})
 
-	return newServer(getters, allModules, cfg.proxy, serverCfg.GoDocMode, serverCfg.DevMode, serverCfg.DevModeStaticDir)
+	return newServer(getters, allModules, cfg.proxy, serverCfg.GoDocMode, serverCfg.DevMode, serverCfg.DevModeStaticDir, serverCfg.DetectLicenses)
 }
 
 // getModuleDirs returns the set of workspace modules for each directory,
@@ -276,12 +277,12 @@ func buildGetters(ctx context.Context, cfg getterConfig) ([]fetch.ModuleGetter, 
 	return getters, nil
 }
 
-func newServer(getters []fetch.ModuleGetter, localModules []frontend.LocalModule, prox *proxy.Client, goDocMode bool, devMode bool, staticFlag string) (*frontend.Server, error) {
+func newServer(getters []fetch.ModuleGetter, localModules []frontend.LocalModule, prox *proxy.Client, goDocMode bool, devMode bool, staticFlag string, detectLicenses licenses.DetectorFunc) (*frontend.Server, error) {
 	lds := fetchdatasource.Options{
 		Getters:              getters,
 		ProxyClientForLatest: prox,
 		BypassLicenseCheck:   true,
-		DetectLicenses:       licensedetect.Detect,
+		DetectLicenses:       detectLicenses,
 	}.New()
 
 	// In dev mode, use a dirFS to pick up template/JS/CSS changes without

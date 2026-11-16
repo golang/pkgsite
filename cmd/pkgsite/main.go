@@ -62,6 +62,7 @@ import (
 
 	"golang.org/x/pkgsite/cmd/internal/pkgsite"
 	"golang.org/x/pkgsite/internal/browser"
+	"golang.org/x/pkgsite/internal/licenses/licensedetect"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/middleware/timeout"
 	"golang.org/x/pkgsite/internal/proxy"
@@ -98,6 +99,7 @@ func main() {
 	flag.Parse()
 
 	serverCfg.UseLocalStdlib = true
+	serverCfg.DetectLicenses = licensedetect.Detect
 	serverCfg.GoRepoPath = *goRepoPath
 	serverCfg.Paths = collectPaths(flag.Args())
 
