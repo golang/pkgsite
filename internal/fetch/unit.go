@@ -9,6 +9,7 @@ import (
 
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/licenses/licensedetect"
 	"golang.org/x/pkgsite/internal/stdlib"
 )
 
@@ -17,7 +18,7 @@ import (
 func moduleUnit(modulePath string, unitMeta *internal.UnitMeta,
 	pkg *goPackage,
 	readme *internal.Readme,
-	d *licenses.Detector) *internal.Unit {
+	d *licensedetect.Detector) *internal.Unit {
 
 	suffix := internal.Suffix(unitMeta.Path, modulePath)
 	if modulePath == stdlib.ModulePath {

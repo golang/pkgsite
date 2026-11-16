@@ -14,7 +14,7 @@ import (
 	"time"
 
 	"golang.org/x/pkgsite/internal"
-	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/licenses/licensedetect"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
@@ -85,7 +85,7 @@ func cleanFetchResult(t *testing.T, fr *FetchResult) *FetchResult {
 	return fr
 }
 
-func cleanLicenses(t *testing.T, fr *FetchResult, detector *licenses.Detector) *FetchResult {
+func cleanLicenses(t *testing.T, fr *FetchResult, detector *licensedetect.Detector) *FetchResult {
 	fr.Module.Licenses = nil
 	for _, u := range fr.Module.Units {
 		u.Licenses = nil
@@ -134,7 +134,7 @@ func updateFetchResultVersions(t *testing.T, fr *FetchResult, local bool) *Fetch
 
 // proxyFetcher is a test helper function that sets up a test proxy, fetches
 // a module using FetchModule, and returns fetch result and a license detector.
-func proxyFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxytest.Module, fetchVersion string) (*FetchResult, *licenses.Detector) {
+func proxyFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxytest.Module, fetchVersion string) (*FetchResult, *licensedetect.Detector) {
 	t.Helper()
 
 	modulePath := mod.ModulePath
@@ -164,7 +164,7 @@ func proxyFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 // localFetcher is a helper function that creates a test directory to hold a
 // module, fetches the module from the directory, and returns a fetch result
 // and a license detector.
-func localFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxytest.Module, fetchVersion string) (*FetchResult, *licenses.Detector) {
+func localFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxytest.Module, fetchVersion string) (*FetchResult, *licensedetect.Detector) {
 	t.Helper()
 
 	directory, err := testhelper.CreateTestDirectory(mod.Files)
@@ -183,7 +183,7 @@ func localFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 		return got, nil
 	}
 
-	d := licenses.NewDetectorFS(modulePath, LocalVersion, os.DirFS(directory), func(format string, args ...any) {
+	d := licensedetect.NewDetectorFS(modulePath, LocalVersion, os.DirFS(directory), func(format string, args ...any) {
 		log.Infof(ctx, format, args...)
 	})
 	return got, d
@@ -191,7 +191,7 @@ func localFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, m
 
 // stdlibZipFetcher is a test helper function that sets up a test proxy, fetches
 // a module using FetchModule, and returns a fetch result and a license detector.
-func stdlibZipFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxytest.Module, fetchVersion string) (*FetchResult, *licenses.Detector) {
+func stdlibZipFetcher(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxytest.Module, fetchVersion string) (*FetchResult, *licensedetect.Detector) {
 	t.Helper()
 
 	modulePath := mod.ModulePath
@@ -213,13 +213,13 @@ func stdlibZipFetcher(t *testing.T, withLicenseDetector bool, ctx context.Contex
 		t.Fatal(err)
 	}
 
-	d := licenses.NewDetectorFS(modulePath, fetchVersion, fs, func(format string, args ...any) {
+	d := licensedetect.NewDetectorFS(modulePath, fetchVersion, fs, func(format string, args ...any) {
 		log.Infof(ctx, format, args...)
 	})
 	return got, d
 }
 
-func licenseDetector(ctx context.Context, t *testing.T, modulePath, version string, proxyClient *proxy.Client) *licenses.Detector {
+func licenseDetector(ctx context.Context, t *testing.T, modulePath, version string, proxyClient *proxy.Client) *licensedetect.Detector {
 	t.Helper()
 	var (
 		contentDir fs.FS
@@ -243,7 +243,7 @@ func licenseDetector(ctx context.Context, t *testing.T, modulePath, version stri
 	logf := func(format string, args ...any) {
 		log.Infof(ctx, format, args...)
 	}
-	return licenses.NewDetectorFS(modulePath, version, contentDir, logf)
+	return licensedetect.NewDetectorFS(modulePath, version, contentDir, logf)
 }
 
 func sortFetchResult(fr *FetchResult) {

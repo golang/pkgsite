@@ -17,7 +17,7 @@ import (
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc"
-	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/licenses/licensedetect"
 	"golang.org/x/pkgsite/internal/log"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -51,7 +51,7 @@ type LazyModule struct {
 	goModPath        string
 	requestedVersion string
 	failedPackages   []*internal.PackageVersionState
-	licenseDetector  *licenses.Detector
+	licenseDetector  *licensedetect.Detector
 	contentDir       fs.FS
 	godocModInfo     *godoc.ModuleInfo
 	Error            error
@@ -160,7 +160,7 @@ func fetchLazyModule(ctx context.Context, modulePath, requestedVersion string, m
 	logf := func(format string, args ...any) {
 		log.Infof(ctx, format, args...)
 	}
-	lm.licenseDetector = licenses.NewDetectorFS(modulePath, v, contentDir, logf)
+	lm.licenseDetector = licensedetect.NewDetectorFS(modulePath, v, contentDir, logf)
 	lm.ModuleInfo.IsRedistributable = lm.licenseDetector.ModuleIsRedistributable()
 	lm.UnitMetas, lm.godocModInfo, lm.failedPackages, err = extractUnitMetas(ctx, lm.ModuleInfo, contentDir)
 	if err != nil {

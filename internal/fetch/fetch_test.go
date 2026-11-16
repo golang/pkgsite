@@ -24,7 +24,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
-	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/licenses/licensedetect"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/source"
 	"golang.org/x/pkgsite/internal/stdlib"
@@ -37,12 +37,12 @@ var (
 	testModules []*proxytest.Module
 )
 
-type fetchFunc func(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxytest.Module, fetchVersion string) (*FetchResult, *licenses.Detector)
+type fetchFunc func(t *testing.T, withLicenseDetector bool, ctx context.Context, mod *proxytest.Module, fetchVersion string) (*FetchResult, *licensedetect.Detector)
 
 func TestMain(m *testing.M) {
 	dochtml.LoadTemplates(templateFS)
 	testModules = proxytest.LoadTestModules("../proxy/testdata")
-	licenses.OmitExceptions = true
+	licensedetect.OmitExceptions = true
 	os.Exit(m.Run())
 }
 

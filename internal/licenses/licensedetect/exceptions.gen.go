@@ -6,7 +6,7 @@
 
 //lint:file-ignore ST1018 Ignore staticcheck message about Unicode control characters.
 
-package licenses
+package licensedetect
 
 import "github.com/google/licensecheck"
 

@@ -20,7 +20,7 @@ import (
 	"golang.org/x/pkgsite/internal/derrors"
 	"golang.org/x/pkgsite/internal/fetch"
 	"golang.org/x/pkgsite/internal/godoc/dochtml"
-	"golang.org/x/pkgsite/internal/licenses"
+	"golang.org/x/pkgsite/internal/licenses/licensedetect"
 	"golang.org/x/pkgsite/internal/proxy"
 	"golang.org/x/pkgsite/internal/proxy/proxytest"
 	"golang.org/x/pkgsite/internal/source"
@@ -37,7 +37,7 @@ var (
 func TestMain(m *testing.M) {
 	dochtml.LoadTemplates(template.TrustedFSFromTrustedSource(template.TrustedSourceFromConstant("../../static")))
 	defaultTestModules = proxytest.LoadTestModules("../proxy/testdata")
-	licenses.OmitExceptions = true
+	licensedetect.OmitExceptions = true
 	os.Exit(m.Run())
 }
 
