@@ -65,7 +65,45 @@ type Metadata struct {
 	// FilePath is the '/'-separated path to the license file in the module zip,
 	// relative to the contents directory.
 	FilePath string
-	Coverage licensecheck.Coverage
+	Coverage Coverage
+}
+
+// Coverage describes how much of a file is covered by recognized licenses.
+// Its structure matches github.com/google/licensecheck.Coverage so JSON
+// serialization in the database is unchanged.
+type Coverage struct {
+	Percent float64
+	Match   []Match
+}
+
+// Match describes how a section of text matches a license.
+// Its structure matches github.com/google/licensecheck.Match.
+type Match struct {
+	ID    string
+	Type  uint
+	Start int
+	End   int
+	IsURL bool
+}
+
+func fromLicensecheckCoverage(c licensecheck.Coverage) Coverage {
+	var matches []Match
+	if c.Match != nil {
+		matches = make([]Match, len(c.Match))
+		for i, m := range c.Match {
+			matches[i] = Match{
+				ID:    m.ID,
+				Type:  uint(m.Type),
+				Start: m.Start,
+				End:   m.End,
+				IsURL: m.IsURL,
+			}
+		}
+	}
+	return Coverage{
+		Percent: c.Percent,
+		Match:   matches,
+	}
 }
 
 // A License is a classified license file path and its contents.
@@ -570,11 +608,11 @@ func (d *Detector) readFile(pathname string) ([]byte, error) {
 // DetectFile return the set of license types for the given file contents. It
 // also returns the licensecheck coverage information. The filename is used
 // solely for logging.
-func DetectFile(contents []byte, filename string, logf func(string, ...any)) ([]string, licensecheck.Coverage) {
+func DetectFile(contents []byte, filename string, logf func(string, ...any)) ([]string, Coverage) {
 	if logf == nil {
 		logf = func(string, ...any) {}
 	}
-	cov := scanner().Scan(contents)
+	cov := fromLicensecheckCoverage(scanner().Scan(contents))
 	if cov.Percent < float64(coverageThreshold) {
 		logf("%s license coverage too low (%+v), skipping", filename, cov)
 		return []string{unknownLicenseType}, cov

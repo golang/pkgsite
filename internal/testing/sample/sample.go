@@ -19,7 +19,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/google/licensecheck"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/godoc"
 	"golang.org/x/pkgsite/internal/licenses"
@@ -135,7 +134,7 @@ var (
 // LicenseCmpOpts are options to use when comparing licenses with the cmp package.
 var LicenseCmpOpts = []cmp.Option{
 	cmp.Comparer(coveragePercentEqual),
-	cmpopts.IgnoreFields(licensecheck.Match{}, "Start", "End"),
+	cmpopts.IgnoreFields(licenses.Match{}, "Start", "End"),
 }
 
 // coveragePercentEqual considers two floats the same if they are within 4
@@ -424,9 +423,9 @@ func LicenseMetadata() []*licenses.Metadata {
 		{
 			Types:    []string{LicenseType},
 			FilePath: LicenseFilePath,
-			Coverage: licensecheck.Coverage{
+			Coverage: licenses.Coverage{
 				Percent: 100,
-				Match:   []licensecheck.Match{{ID: "MIT", Type: 0}},
+				Match:   []licenses.Match{{ID: "MIT", Type: 0}},
 			},
 		},
 	}

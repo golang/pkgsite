@@ -20,7 +20,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/google/licensecheck"
 	"github.com/google/safehtml"
 	"golang.org/x/pkgsite/internal"
 	"golang.org/x/pkgsite/internal/database"
@@ -294,9 +293,9 @@ func TestInsertModuleNewCoverage(t *testing.T) {
 	ctx := context.Background()
 
 	m := sample.DefaultModule()
-	newCoverage := licensecheck.Coverage{
+	newCoverage := licenses.Coverage{
 		Percent: 100,
-		Match:   []licensecheck.Match{{ID: "New", Start: 1, End: 10}},
+		Match:   []licenses.Match{{ID: "New", Start: 1, End: 10}},
 	}
 	m.Licenses = []*licenses.License{
 		{

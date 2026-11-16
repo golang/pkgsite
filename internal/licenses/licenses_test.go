@@ -231,9 +231,9 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 Except as contained in this notice, the name of a copyright holder shall not be used in advertising or otherwise to promote the sale, use or other dealings in this Software without prior written authorization of the copyright holder.`
 )
 
-var mitCoverage = lc.Coverage{
+var mitCoverage = Coverage{
 	Percent: 100,
-	Match:   []lc.Match{{ID: "MIT"}},
+	Match:   []Match{{ID: "MIT"}},
 }
 
 func TestModuleIsRedistributable(t *testing.T) {
@@ -441,9 +441,9 @@ func TestDetectFiles(t *testing.T) {
 			contents: map[string]string{
 				"LICENSE": icuLicense,
 			},
-			want: []*Metadata{{Types: []string{"ICU"}, FilePath: "LICENSE", Coverage: lc.Coverage{
+			want: []*Metadata{{Types: []string{"ICU"}, FilePath: "LICENSE", Coverage: Coverage{
 				Percent: 100,
-				Match:   []lc.Match{{ID: "ICU"}},
+				Match:   []Match{{ID: "ICU"}},
 			}}},
 		},
 
@@ -455,9 +455,9 @@ func TestDetectFiles(t *testing.T) {
 				"COPYING":        bsd0License,
 			},
 			want: []*Metadata{
-				{Types: []string{"0BSD"}, FilePath: "COPYING", Coverage: lc.Coverage{
+				{Types: []string{"0BSD"}, FilePath: "COPYING", Coverage: Coverage{
 					Percent: 100,
-					Match:   []lc.Match{{ID: "0BSD"}},
+					Match:   []Match{{ID: "0BSD"}},
 				}},
 				{Types: []string{"MIT"}, FilePath: "LICENSE", Coverage: mitCoverage},
 				{Types: []string{"MIT"}, FilePath: "foo/LICENSE.md", Coverage: mitCoverage},
@@ -469,9 +469,9 @@ func TestDetectFiles(t *testing.T) {
 				"LICENSE": mitLicense + "\n" + bsd0License,
 			},
 			want: []*Metadata{
-				{Types: []string{"0BSD", "MIT"}, FilePath: "LICENSE", Coverage: lc.Coverage{
+				{Types: []string{"0BSD", "MIT"}, FilePath: "LICENSE", Coverage: Coverage{
 					Percent: 100,
-					Match: []lc.Match{
+					Match: []Match{
 						{ID: "MIT"},
 						{ID: "0BSD"},
 					},
@@ -503,9 +503,9 @@ func TestDetectFiles(t *testing.T) {
 				{
 					Types:    []string{"UNKNOWN"},
 					FilePath: "foo/LICENSE",
-					Coverage: lc.Coverage{
+					Coverage: Coverage{
 						Percent: 69.361,
-						Match:   []lc.Match{{ID: "MIT"}},
+						Match:   []Match{{ID: "MIT"}},
 					},
 				},
 			},
@@ -544,9 +544,9 @@ func TestDetectFiles(t *testing.T) {
 				{
 					Types:    []string{"Apache-2.0"},
 					FilePath: "LICENSE",
-					Coverage: lc.Coverage{
+					Coverage: Coverage{
 						Percent: 100,
-						Match: []lc.Match{{
+						Match: []Match{{
 							ID: "Apache-2.0",
 						}},
 					},
@@ -569,7 +569,7 @@ func TestDetectFiles(t *testing.T) {
 
 			opts := []cmp.Option{
 				cmp.Comparer(coveragePercentEqual),
-				cmpopts.IgnoreFields(lc.Match{}, "Start", "End"),
+				cmpopts.IgnoreFields(Match{}, "Start", "End"),
 			}
 			if diff := cmp.Diff(test.want, got, opts...); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
