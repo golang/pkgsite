@@ -255,8 +255,14 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 	handle("GET /v1/search", apiSearchHandler)
 	handle("GET /v1/vulns/", s.apiHandler(api.ServeVulnerabilities(s.vulnClient)))
 	handle("GET /v1/api", s.apiDocHandler())
-	handle("GET /api", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/v1/api", http.StatusMovedPermanently)
+	apiRedirect := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/v1/api", http.StatusFound)
+	})
+	handle("GET /api", apiRedirect)
+	handle("GET /api/{$}", apiRedirect)
+	handle("/api/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		api.ServeError(w, r, api.BadRequest("unknown API endpoint",
+			"API endpoints are rooted at /v1/; GET /v1/api at this host and port and read the documentation"))
 	}))
 	handle("GET /v1", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/api", http.StatusMovedPermanently)

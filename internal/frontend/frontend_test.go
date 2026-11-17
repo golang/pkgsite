@@ -237,8 +237,8 @@ func TestAPIRedirect(t *testing.T) {
 	t.Run("redirect /api", func(t *testing.T) {
 		w := httptest.NewRecorder()
 		handler.ServeHTTP(w, httptest.NewRequest("GET", "/api", nil))
-		if w.Code != http.StatusMovedPermanently {
-			t.Errorf("got status code = %d, want %d", w.Code, http.StatusMovedPermanently)
+		if w.Code != http.StatusFound {
+			t.Errorf("got status code = %d, want %d", w.Code, http.StatusFound)
 		}
 		if got := w.Header().Get("Location"); got != "/v1/api" {
 			t.Errorf("got Location = %q, want %q", got, "/v1/api")
@@ -266,20 +266,42 @@ func TestAPIRedirect(t *testing.T) {
 			t.Errorf("got Location = %q, want %q", got, want)
 		}
 	})
+
+	t.Run("redirect /api/", func(t *testing.T) {
+		w := httptest.NewRecorder()
+		handler.ServeHTTP(w, httptest.NewRequest("GET", "/api/", nil))
+		if w.Code != http.StatusFound {
+			t.Errorf("got status code = %d, want %d", w.Code, http.StatusFound)
+		}
+		if got, want := w.Header().Get("Location"), "/v1/api"; got != want {
+			t.Errorf("got Location = %q, want %q", got, want)
+		}
+	})
 }
 
 func TestAPIUnknownEndpoint(t *testing.T) {
 	_, handler := newTestServer(t, nil)
-	w := httptest.NewRecorder()
-	handler.ServeHTTP(w, httptest.NewRequest("GET", "/v1/moo", nil))
-	if got, want := w.Code, http.StatusBadRequest; got != want {
-		t.Errorf("got status code = %d, want %d", got, want)
-	}
-	var bodyErr api.Error
-	if err := json.Unmarshal(w.Body.Bytes(), &bodyErr); err != nil {
-		t.Fatal(err)
-	}
-	if !strings.Contains(strings.ToLower(bodyErr.Message), "unknown") {
-		t.Errorf("did not see 'unknown' in error message: %s", bodyErr.Message)
+	for _, tc := range []struct {
+		method, path string
+	}{
+		{"GET", "/v1/moo"},
+		{"GET", "/api/search"},
+		{"GET", "/api/v1/package/foo"},
+		{"POST", "/api/"},
+	} {
+		t.Run(tc.method+" "+tc.path, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, httptest.NewRequest(tc.method, tc.path, nil))
+			if got, want := w.Code, http.StatusBadRequest; got != want {
+				t.Errorf("%s %q status = %d, want %d", tc.method, tc.path, got, want)
+			}
+			var bodyErr api.Error
+			if err := json.Unmarshal(w.Body.Bytes(), &bodyErr); err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(strings.ToLower(bodyErr.Message), "unknown") {
+				t.Errorf("%s %q error message = %q, want substring 'unknown'", tc.method, tc.path, bodyErr.Message)
+			}
+		})
 	}
 }
