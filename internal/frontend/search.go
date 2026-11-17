@@ -10,7 +10,9 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"path"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -46,7 +48,11 @@ func (s *Server) serveSearch(w http.ResponseWriter, r *http.Request, ds internal
 		http.Redirect(w, r, action.redirectURL, http.StatusFound)
 		return nil
 	}
-	action.page.SetBasePage(s.newBasePage(r, action.title))
+	bp := s.newBasePage(r, action.title)
+	if action.template == "search" {
+		bp.JSONURL = searchAPIURL(r)
+	}
+	action.page.SetBasePage(bp)
 	if s.shouldServeJSON(r) {
 		return s.serveJSONPage(w, r, action.page)
 	}
@@ -492,6 +498,53 @@ func searchQueryAndFilters(r *http.Request) (string, []string) {
 // rawSearchQuery returns the exact search query by the user.
 func rawSearchQuery(r *http.Request) string {
 	return strings.TrimSpace(r.FormValue("q"))
+}
+
+// searchAPIURL returns the /v1/search URL equivalent to the search page
+// request r, or "" if there is none.
+//
+// /v1/search finds symbol in packages matching q. On the search page, a symbol
+// search names its symbol with "#", or with the whole query if it is a single
+// word. A symbol search with several words but no "#" tries each word as the
+// symbol, which /v1/search can't express:
+//
+//	query            mode     /v1/search
+//	json             package  q=json
+//	Unmarshal        symbol   symbol=Unmarshal
+//	#Unmarshal json  symbol   q=json&symbol=Unmarshal
+//	json Unmarshal   symbol   (none)
+func searchAPIURL(r *http.Request) string {
+	q, filters := searchQueryAndFilters(r)
+	words := strings.Fields(q)
+	var symbol string
+	if searchMode(r) == searchModeSymbol {
+		switch {
+		case len(filters) == 1:
+			// searchQueryAndFilters leaves the symbol in q; remove it.
+			symbol = filters[0]
+			if i := slices.Index(words, symbol); i >= 0 {
+				words = slices.Delete(words, i, i+1)
+			}
+		case len(words) == 1:
+			symbol, words = words[0], nil
+		default:
+			return ""
+		}
+	}
+	v := url.Values{}
+	if len(words) > 0 {
+		v.Set("q", strings.Join(words, " "))
+	}
+	if symbol != "" {
+		v.Set("symbol", symbol)
+	}
+	if len(v) == 0 {
+		return ""
+	}
+	if limit := r.FormValue("limit"); limit != "" {
+		v.Set("limit", limit)
+	}
+	return "/v1/search?" + v.Encode()
 }
 
 // rawSearchMode returns the exact search mode from the URL request.

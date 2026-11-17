@@ -206,6 +206,13 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 		// defaultTTL (10m) once downstream CDN caching is enabled.
 		apiSearchHandler = apiCacheHeaders(cacher.Cache("api-search", searchTTL, authValues)(apiSearchHandler))
 	}
+	// Advertise the /v1/ API in a Link header. This must wrap the cached
+	// handlers above, because the cache replays only response bodies. Local
+	// mode is skipped because its data source supports only part of the API.
+	if !s.localMode {
+		detailHandler = apiLinkHeader(detailHandler, detailLinkHeader)
+		searchHandler = apiLinkHeader(searchHandler, s.searchLinkHeader)
+	}
 	// Each AppEngine instance is created in response to a start request, which
 	// is an empty HTTP GET request to /_ah/start when scaling is set to manual
 	// or basic, and /_ah/warmup when scaling is automatic and min_instances is
@@ -492,6 +499,53 @@ func apiCacheHeaders(h http.Handler) http.Handler {
 		w.Header().Set("Cache-Control", "public, max-age=3600")
 		h.ServeHTTP(w, r)
 	})
+}
+
+// apiDiscoveryLinkHeader advertises the API description and documentation
+// (RFC 8631).
+const apiDiscoveryLinkHeader = `</v1/openapi.yaml>; rel="service-desc"; type="text/yaml", </v1/api>; rel="service-doc"`
+
+// apiLinkHeader wraps h to add the Link header returned by linkFor, if any, to
+// 200 OK responses. It must wrap cacher.Cache, which replays only bodies.
+func apiLinkHeader(h http.Handler, linkFor func(*http.Request) string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if link := linkFor(r); link != "" {
+			w.Header().Set("Link", link)
+			w = linkHeaderWriter{w}
+		}
+		h.ServeHTTP(w, r)
+	})
+}
+
+// linkHeaderWriter removes the Link header from error and redirect responses.
+type linkHeaderWriter struct{ http.ResponseWriter }
+
+func (w linkHeaderWriter) WriteHeader(code int) {
+	if code != http.StatusOK {
+		w.Header().Del("Link")
+	}
+	w.ResponseWriter.WriteHeader(code)
+}
+
+// detailLinkHeader returns the Link header for unit pages. The homepage and
+// the evals tab have no API equivalent.
+func detailLinkHeader(r *http.Request) string {
+	if (r.Method != http.MethodGet && r.Method != http.MethodHead) ||
+		r.URL.Path == "/" || r.URL.Query().Get("tab") == tabEvals {
+		return ""
+	}
+	return apiDiscoveryLinkHeader
+}
+
+// searchLinkHeader returns the Link header for search pages, including the
+// equivalent /v1/search URL. Searches without one, such as vulnerability
+// searches, get no header.
+func (s *Server) searchLinkHeader(r *http.Request) string {
+	u := searchAPIURL(r)
+	if u == "" || (s.vulnClient != nil && searchMode(r) == searchModeVuln) {
+		return ""
+	}
+	return fmt.Sprintf(`%s, <%s>; rel="alternate"; type="application/json"`, apiDiscoveryLinkHeader, u)
 }
 
 // TagRoute categorizes incoming requests to the frontend for use in

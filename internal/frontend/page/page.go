@@ -63,6 +63,9 @@ type BasePage struct {
 	// SurveyBanner describes the Go Developer Survey banner to show on the
 	// page, or is nil when no banner should be shown.
 	SurveyBanner *SurveyBanner
+
+	// JSONURL is the /v1/ API URL equivalent to this page, if any.
+	JSONURL string
 }
 
 // SurveyBanner describes a Go Developer Survey promotion shown on the page.

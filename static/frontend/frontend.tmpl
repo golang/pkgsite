@@ -7,6 +7,11 @@
 <!DOCTYPE html>
 <html lang="en" data-layout="{{if .UseResponsiveLayout}}responsive{{end}}" data-local="{{if .LocalMode}}true{{end}}" data-version="{{.AppVersionLabel}}">
   <head>
+    {{if and (not .LocalMode) .JSONURL}}
+    <link rel="service-desc" type="text/yaml" href="/v1/openapi.yaml" title="pkg.go.dev OpenAPI Specification (/v1/package, /v1/symbols, /v1/module, /v1/packages, /v1/imported-by, /v1/versions, /v1/vulns, /v1/search)">
+    <link rel="service-doc" href="/v1/api" title="pkg.go.dev API Documentation">
+    <link rel="alternate" type="application/json" href="{{.JSONURL}}" title="pkg.go.dev JSON API (fields are opt-in; inspect /v1/openapi.yaml for query parameters such as doc, examples, imports, licenses, readme, and filter)">
+    {{end}}
     <!-- This will capture unhandled errors during page load for reporting later. -->
     <script>
       window.addEventListener('error', window.__err=function f(e){f.p=f.p||[];f.p.push(e)});

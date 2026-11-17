@@ -231,6 +231,110 @@ func TestInstallFS(t *testing.T) {
 	}
 }
 
+func TestAPIDiscoverability(t *testing.T) {
+	cacher := fakeCacher{
+		"/example.com/pkg":           []byte("<html></html>"),
+		"/example.com/pkg?tab=evals": []byte("<html></html>"),
+	}
+	_, handler := newTestServer(t, cacher)
+	searchLink := apiDiscoveryLinkHeader + `, </v1/search?q=foo%3Ebar>; rel="alternate"; type="application/json"`
+	tests := []struct {
+		method, path, wantLink string
+	}{
+		{"GET", "/", ""},
+		{"GET", "/about", ""},
+		{"GET", "/nonexistent.example.com/pkg", ""},
+		{"GET", "/search?q=", ""},
+		{"GET", "/search?q=foo%3Ebar&m=package", searchLink},
+		{"GET", "/search?q=json+Unmarshal&m=symbol", ""},
+		{"GET", "/example.com/pkg", apiDiscoveryLinkHeader},
+		{"HEAD", "/example.com/pkg", apiDiscoveryLinkHeader},
+		{"POST", "/example.com/pkg", ""},
+		{"GET", "/example.com/pkg?tab=evals", ""},
+	}
+	for _, test := range tests {
+		for range 2 {
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, httptest.NewRequest(test.method, test.path, nil))
+			if got := w.Header().Get("Link"); got != test.wantLink {
+				t.Errorf("%s %s: Link = %q, want %q", test.method, test.path, got, test.wantLink)
+			}
+			if test.wantLink == "" && strings.Contains(w.Body.String(), `rel="service-desc"`) {
+				t.Errorf("%s %s: body unexpectedly links to the API", test.method, test.path)
+			}
+		}
+	}
+
+	w := httptest.NewRecorder()
+	handler.ServeHTTP(w, httptest.NewRequest("GET", "/search?q=foo", nil))
+	for _, want := range []string{
+		`<link rel="service-desc" type="text/yaml" href="/v1/openapi.yaml"`,
+		`<link rel="service-doc" href="/v1/api"`,
+		`<link rel="alternate" type="application/json" href="/v1/search?q=foo"`,
+	} {
+		if !strings.Contains(w.Body.String(), want) {
+			t.Errorf("GET /search?q=foo: body does not contain %s", want)
+		}
+	}
+}
+
+func TestUnitAPIURL(t *testing.T) {
+	pkg := &internal.UnitMeta{
+		Path:       "golang.org/x/sync/errgroup",
+		Name:       "errgroup",
+		ModuleInfo: internal.ModuleInfo{ModulePath: "golang.org/x/sync"},
+	}
+	mod := &internal.UnitMeta{
+		Path:       "golang.org/x/mod",
+		ModuleInfo: internal.ModuleInfo{ModulePath: "golang.org/x/mod"},
+	}
+	tests := []struct {
+		um           *internal.UnitMeta
+		version, tab string
+		want         string
+	}{
+		{pkg, "latest", tabMain, "/v1/package/golang.org/x/sync/errgroup?doc=md"},
+		{pkg, "latest", tabImports, "/v1/package/golang.org/x/sync/errgroup?imports=true"},
+		{pkg, "latest", tabImportedBy, "/v1/imported-by/golang.org/x/sync/errgroup"},
+		{pkg, "v0.10.0", tabLicenses, "/v1/package/golang.org/x/sync/errgroup?licenses=true&version=v0.10.0"},
+		{pkg, "v2.2.2+incompatible", tabMain, "/v1/package/golang.org/x/sync/errgroup?doc=md&version=v2.2.2%2Bincompatible"},
+		{pkg, "latest", tabEvals, ""},
+		{mod, "latest", tabMain, "/v1/packages/golang.org/x/mod"},
+		{mod, "latest", tabLicenses, "/v1/module/golang.org/x/mod?licenses=true"},
+		{mod, "v0.14.0", tabVersions, "/v1/versions/golang.org/x/mod"},
+	}
+	for _, test := range tests {
+		if got := unitAPIURL(test.um, test.version, test.tab); got != test.want {
+			t.Errorf("unitAPIURL(%q, %q, %q) = %q, want %q", test.um.Path, test.version, test.tab, got, test.want)
+		}
+	}
+}
+
+func TestSearchAPIURL(t *testing.T) {
+	tests := []struct {
+		query, want string
+	}{
+		{"q=foo&limit=50", "/v1/search?limit=50&q=foo"},
+		{"q=Unmarshal&m=package", "/v1/search?q=Unmarshal"},
+		{"q=Unmarshal", "/v1/search?symbol=Unmarshal"},
+		{"q=json.Unmarshal", "/v1/search?symbol=json.Unmarshal"},
+		{"q=foo&m=symbol&limit=50", "/v1/search?limit=50&symbol=foo"},
+		{"q=%23Unmarshal", "/v1/search?symbol=Unmarshal"},
+		{"q=%23unmarshal+json", "/v1/search?q=json&symbol=unmarshal"},
+		{"q=json+%23unmarshal", "/v1/search?q=json&symbol=unmarshal"},
+		{"q=%23yaml+yaml", "/v1/search?q=yaml&symbol=yaml"},
+		{"q=json+Unmarshal&m=symbol", ""},
+		{"q=%23json+%23Unmarshal", ""},
+		{"q=", ""},
+	}
+	for _, test := range tests {
+		r := httptest.NewRequest("GET", "/search?"+test.query, nil)
+		if got := searchAPIURL(r); got != test.want {
+			t.Errorf("searchAPIURL(%q) = %q, want %q", test.query, got, test.want)
+		}
+	}
+}
+
 func TestAPIRedirect(t *testing.T) {
 	_, handler := newTestServer(t, nil)
 

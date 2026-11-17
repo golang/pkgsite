@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 
@@ -207,6 +208,7 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 	}
 	title := pageTitle(um)
 	basePage := s.newBasePage(r, title)
+	basePage.JSONURL = unitAPIURL(um, info.RequestedVersion, tab)
 	tabSettings := unitTabLookup[tab]
 	basePage.AllowWideContent = true
 	if tabSettings.Name == "" {
@@ -262,6 +264,45 @@ func (s *Server) serveUnitPage(ctx context.Context, w http.ResponseWriter, r *ht
 
 func (s *Server) shouldServeJSON(r *http.Request) bool {
 	return s.serveStats && r.FormValue("content") == "json"
+}
+
+// unitAPIURL returns the /v1/ API URL equivalent to the given tab of a unit
+// page, or "" if there is none.
+func unitAPIURL(um *internal.UnitMeta, requestedVersion, tab string) string {
+	var path string
+	q := url.Values{}
+	switch tab {
+	case tabMain:
+		if um.IsPackage() {
+			path = "/v1/package/" + um.Path
+			q.Set("doc", "md")
+		} else {
+			path = "/v1/packages/" + um.ModulePath
+		}
+	case tabImports:
+		path = "/v1/package/" + um.Path
+		q.Set("imports", "true")
+	case tabImportedBy:
+		path = "/v1/imported-by/" + um.Path
+	case tabVersions:
+		return "/v1/versions/" + um.ModulePath // takes no version parameter
+	case tabLicenses:
+		if um.IsPackage() {
+			path = "/v1/package/" + um.Path
+		} else {
+			path = "/v1/module/" + um.ModulePath
+		}
+		q.Set("licenses", "true")
+	default:
+		return ""
+	}
+	if requestedVersion != version.Latest {
+		q.Set("version", requestedVersion)
+	}
+	if len(q) > 0 {
+		path += "?" + q.Encode()
+	}
+	return path
 }
 
 func (s *Server) serveJSONPage(w http.ResponseWriter, r *http.Request, d any) (err error) {
