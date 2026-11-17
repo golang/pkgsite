@@ -95,13 +95,13 @@ are suitable for tests with data that is consistent between environments or
 static pages.
 
 On LUCI, the screentest suite runs automatically in post-submit on the
-`x_pkgsite-gotip-linux-amd64_docker-screentest` builder, and is optional in
+`x_pkgsite-gotip-linux-amd64-screentest` builder, and is optional in
 presubmit. To run screentests on a Gerrit CL before submitting, add the
 following footer to the commit message (and vote `Commit-Queue+1`), or select the
 builder via **Choose Tryjobs** in the Gerrit UI:
 
 ```
-Cq-Include-Trybots: luci.golang.try:x_pkgsite-gotip-linux-amd64_docker-screentest
+Cq-Include-Trybots: luci.golang.try:x_pkgsite-gotip-linux-amd64-screentest
 ```
 
 ### Updating the tests

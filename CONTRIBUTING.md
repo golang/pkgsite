@@ -78,7 +78,7 @@ By default, logs for all levels will be printed.
    LUCI runs visual regression tests during presubmit:
 
    ```
-   Cq-Include-Trybots: luci.golang.try:x_pkgsite-gotip-linux-amd64_docker-screentest
+   Cq-Include-Trybots: luci.golang.try:x_pkgsite-gotip-linux-amd64-screentest
    ```
 
 ## Tips for Code Review
