@@ -56,10 +56,9 @@ func ServePackage(w http.ResponseWriter, r *http.Request, ds internal.DataSource
 	defer derrors.Wrap(&err, "ServePackage")
 
 	// api:pathparam path Package path.
-	pkgPath := trimPath(r, "/v1/package/")
-	if pkgPath == "" {
-		return BadRequest("missing package path",
-			"the package path must be provided after '/package/'")
+	pkgPath, err := trimPath(r, "/v1/package/", "package path")
+	if err != nil {
+		return err
 	}
 
 	// api:params PackageParams
@@ -149,10 +148,9 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 	defer derrors.Wrap(&err, "ServeModule")
 
 	// api:pathparam path Module path.
-	modulePath := trimPath(r, "/v1/module/")
-	if modulePath == "" {
-		return BadRequest("missing module path",
-			"the module path must be provided after '/module/'")
+	modulePath, err := trimPath(r, "/v1/module/", "module path")
+	if err != nil {
+		return err
 	}
 
 	// api:params ModuleParams
@@ -241,10 +239,9 @@ func ServeModuleVersions(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	defer derrors.Wrap(&err, "ServeModuleVersions")
 
 	// api:pathparam path Module path.
-	path := trimPath(r, "/v1/versions/")
-	if path == "" {
-		return BadRequest("missing module path",
-			"the module path must be provided after '/versions/'")
+	path, err := trimPath(r, "/v1/versions/", "module path")
+	if err != nil {
+		return err
 	}
 
 	// api:params VersionsParams
@@ -350,10 +347,9 @@ func ServeModulePackages(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	defer derrors.Wrap(&err, "ServeModulePackages")
 
 	// api:pathparam path Module path.
-	modulePath := trimPath(r, "/v1/packages/")
-	if modulePath == "" {
-		return BadRequest("missing module path",
-			"the module path must be provided after '/packages/'")
+	modulePath, err := trimPath(r, "/v1/packages/", "module path")
+	if err != nil {
+		return err
 	}
 
 	// api:params PackagesParams
@@ -497,10 +493,9 @@ func ServePackageSymbols(w http.ResponseWriter, r *http.Request, ds internal.Dat
 	defer derrors.Wrap(&err, "ServePackageSymbols")
 
 	// api:pathparam path Package path.
-	pkgPath := trimPath(r, "/v1/symbols/")
-	if pkgPath == "" {
-		return BadRequest("missing package path",
-			"the package path must be provided after '/symbols/'")
+	pkgPath, err := trimPath(r, "/v1/symbols/", "package path")
+	if err != nil {
+		return err
 	}
 
 	// api:params SymbolsParams
@@ -579,10 +574,9 @@ func ServePackageImportedBy(w http.ResponseWriter, r *http.Request, ds internal.
 	defer derrors.Wrap(&err, "ServePackageImportedBy")
 
 	// api:pathparam path Package path.
-	pkgPath := trimPath(r, "/v1/imported-by/")
-	if pkgPath == "" {
-		return BadRequest("missing package path",
-			"the package path must be provided after '/imported-by/'")
+	pkgPath, err := trimPath(r, "/v1/imported-by/", "package path")
+	if err != nil {
+		return err
 	}
 
 	// api:params ImportedByParams
@@ -695,10 +689,9 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 		defer derrors.Wrap(&err, "ServeVulnerabilities")
 
 		// api:pathparam path Module or package path.
-		path := trimPath(r, "/v1/vulns/")
-		if path == "" {
-			return BadRequest("missing path",
-				"the package or module path must be provided after '/vulns/'")
+		path, err := trimPath(r, "/v1/vulns/", "package or module path")
+		if err != nil {
+			return err
 		}
 
 		// api:params VulnParams
@@ -754,9 +747,21 @@ func ServeVulnerabilities(vc *vuln.Client) func(w http.ResponseWriter, r *http.R
 	}
 }
 
-func trimPath(r *http.Request, prefix string) string {
+func trimPath(r *http.Request, prefix, desc string) (string, error) {
 	path := strings.TrimPrefix(r.URL.Path, prefix)
-	return strings.Trim(path, "/")
+	path = strings.Trim(path, "/")
+	if path == "" {
+		return "", BadRequest("missing "+desc,
+			fmt.Sprintf("the %s must be provided after '%s'", desc, strings.TrimPrefix(prefix, "/v1")))
+	}
+	if _, ver, ok := strings.Cut(path, "@"); ok {
+		fix := "specify the version using the 'version' query parameter"
+		if ver != "" {
+			fix = fmt.Sprintf("specify the version using the 'version' query parameter (for example, '?version=%s')", ver)
+		}
+		return "", BadRequest("version must not be in path", fix)
+	}
+	return path, nil
 }
 
 // resolveModulePath determines the correct module path for a given package path and version.

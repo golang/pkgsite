@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"golang.org/x/pkgsite/internal"
@@ -262,6 +263,40 @@ func TestServeErrorCacheControl(t *testing.T) {
 			}
 			if got := w.Header().Get("Cache-Control"); got != test.wantCC {
 				t.Errorf("Cache-Control = %q, want %q", got, test.wantCC)
+			}
+		})
+	}
+}
+
+func TestVersionInPath(t *testing.T) {
+	ds := fakedatasource.New()
+	for _, tc := range []struct {
+		url   string
+		serve func(http.ResponseWriter, *http.Request, internal.DataSource) error
+	}{
+		{"/v1/package/example.com/pkg@v1.0.0", ServePackage},
+		{"/v1/module/example.com@v1.0.0", ServeModule},
+		{"/v1/packages/example.com@v1.0.0", ServeModulePackages},
+		{"/v1/symbols/example.com/pkg@v1.0.0", ServePackageSymbols},
+		{"/v1/imported-by/example.com/pkg@v1.0.0", ServePackageImportedBy},
+		{"/v1/versions/example.com@v1.0.0", ServeModuleVersions},
+		{"/v1/vulns/example.com@v1.0.0", ServeVulnerabilities(nil)},
+	} {
+		t.Run(tc.url, func(t *testing.T) {
+			r := httptest.NewRequest("GET", tc.url, nil)
+			w := httptest.NewRecorder()
+			err := tc.serve(w, r, ds)
+			if err == nil {
+				t.Fatal("got nil error, want BadRequest")
+			}
+			if err := ServeError(w, r, err); err != nil {
+				t.Fatal(err)
+			}
+			if w.Code != http.StatusBadRequest {
+				t.Errorf("status = %d, want %d; body = %s", w.Code, http.StatusBadRequest, w.Body.String())
+			}
+			if !strings.Contains(w.Body.String(), "?version=v1.0.0") {
+				t.Errorf("body = %q, want substring '?version=v1.0.0'", w.Body.String())
 			}
 		})
 	}
