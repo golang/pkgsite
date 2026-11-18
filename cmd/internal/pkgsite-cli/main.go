@@ -119,6 +119,10 @@ When using -json, the output is a JSON object with the following structure:
         IsStandardLibrary bool
         HasGoMod          bool
         RepoURL           string
+        Deprecated        bool
+        DeprecationReason string
+        Retracted         bool
+        RetractionReason  string
         GoModContents     string
         Readme            *Readme
         Licenses          []License

@@ -343,7 +343,7 @@ type openAPIComponents struct {
 func GenerateOpenAPI() (string, error) {
 	const (
 		openAPISpecVersion = "3.0.3"
-		apiVersion         = "v1.1.0"
+		apiVersion         = "v1.2.0"
 		apiPathPrefix      = "/v1"
 	)
 

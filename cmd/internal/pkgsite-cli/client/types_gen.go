@@ -97,6 +97,10 @@ type Module struct {
 	IsStandardLibrary bool      `json:"isStandardLibrary"`
 	HasGoMod          bool      `json:"hasGoMod"`
 	RepoURL           string    `json:"repoUrl"`
+	Deprecated        bool      `json:"deprecated"`
+	DeprecationReason string    `json:"deprecationReason"`
+	Retracted         bool      `json:"retracted"`
+	RetractionReason  string    `json:"retractionReason"`
 	GoModContents     string    `json:"goModContents,omitempty"`
 	Readme            *Readme   `json:"readme,omitempty"`
 	Licenses          []License `json:"licenses,omitempty"`

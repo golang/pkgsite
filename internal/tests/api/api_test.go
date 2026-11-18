@@ -600,6 +600,23 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 
 	ds.MustInsertModule(t, module(t, mi2, unit("")))
 
+	const depMod = "example.com/dep"
+	depGoMod := "module example.com/dep // Deprecated: use example.com/new\nretract v1.0.0 // security flaw\n"
+	dep1 := modinfo(depMod, "v1.0.0")
+	dep1.LatestVersion = "v1.1.0"
+	dep1.HasGoMod = true
+	dep1.Deprecated = true
+	dep1.DeprecationComment = "use example.com/new"
+	dep1.Retracted = true
+	dep1.RetractionRationale = "security flaw"
+	ds.MustInsertModuleGoMod(t.Context(), t, module(t, dep1, unit("")), depGoMod)
+
+	dep2 := modinfo(depMod, "v1.1.0")
+	dep2.HasGoMod = true
+	dep2.Deprecated = true
+	dep2.DeprecationComment = "use example.com/new"
+	ds.MustInsertModuleGoMod(t.Context(), t, module(t, dep2, unit("")), depGoMod)
+
 	for _, test := range []struct {
 		name       string
 		url        string
@@ -696,6 +713,35 @@ func testServeModule(t *testing.T, ds internal.TestingDataSource) {
 						Contents: "Lorem Ipsum",
 					},
 				},
+			},
+		},
+		{
+			name:       "deprecated and retracted module version",
+			url:        "/v1/module/example.com/dep?version=v1.0.0",
+			wantStatus: http.StatusOK,
+			want: &api.Module{
+				Path:              depMod,
+				Version:           "v1.0.0",
+				IsRedistributable: true,
+				HasGoMod:          true,
+				Deprecated:        true,
+				DeprecationReason: "use example.com/new",
+				Retracted:         true,
+				RetractionReason:  "security flaw",
+			},
+		},
+		{
+			name:       "deprecated latest unretracted module version",
+			url:        "/v1/module/example.com/dep?version=v1.1.0",
+			wantStatus: http.StatusOK,
+			want: &api.Module{
+				Path:              depMod,
+				Version:           "v1.1.0",
+				IsLatest:          true,
+				IsRedistributable: true,
+				HasGoMod:          true,
+				Deprecated:        true,
+				DeprecationReason: "use example.com/new",
 			},
 		},
 	} {

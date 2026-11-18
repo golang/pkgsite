@@ -2,7 +2,7 @@
   "openapi": "3.0.3",
   "info": {
     "title": "Go Pkgsite API",
-    "version": "v1.1.0",
+    "version": "v1.2.0",
     "description": "API for accessing information about Go packages and modules on pkg.go.dev.",
     "contact": {
       "name": "The Go team at Google",
@@ -787,6 +787,12 @@
             "format": "date-time",
             "type": "string"
           },
+          "deprecated": {
+            "type": "boolean"
+          },
+          "deprecationReason": {
+            "type": "string"
+          },
           "goModContents": {
             "type": "string"
           },
@@ -815,6 +821,12 @@
             "$ref": "#/components/schemas/Readme"
           },
           "repoUrl": {
+            "type": "string"
+          },
+          "retracted": {
+            "type": "boolean"
+          },
+          "retractionReason": {
             "type": "string"
           },
           "version": {

@@ -185,6 +185,10 @@ func ServeModule(w http.ResponseWriter, r *http.Request, ds internal.DataSource)
 		IsStandardLibrary: stdlib.Contains(um.ModulePath),
 		IsRedistributable: um.IsRedistributable,
 		HasGoMod:          um.HasGoMod,
+		Deprecated:        um.Deprecated,
+		DeprecationReason: um.DeprecationComment,
+		Retracted:         um.Retracted,
+		RetractionReason:  um.RetractionRationale,
 	}
 	// RepoURL needs to be extracted from source info if available
 	if um.SourceInfo != nil {

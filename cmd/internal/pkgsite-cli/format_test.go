@@ -150,6 +150,31 @@ func TestFormatModuleWithExtras(t *testing.T) {
 	}
 }
 
+func TestFormatModuleDeprecatedAndRetracted(t *testing.T) {
+	var buf bytes.Buffer
+	formatModule(&buf, moduleResult{
+		Module: &client.Module{
+			Path:              "example.com/old",
+			Version:           "v1.0.0",
+			HasGoMod:          true,
+			IsRedistributable: true,
+			Deprecated:        true,
+			DeprecationReason: "use example.com/new",
+			Retracted:         true,
+			RetractionReason:  "security flaw",
+		},
+	})
+	out := buf.String()
+	for _, want := range []string{
+		"Deprecated:       yes (use example.com/new)",
+		"Retracted:        yes (security flaw)",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output missing %q:\n%s", want, out)
+		}
+	}
+}
+
 func TestFormatSearch(t *testing.T) {
 	var buf bytes.Buffer
 	formatSearch(&buf, &client.PaginatedResponse[client.SearchResult]{

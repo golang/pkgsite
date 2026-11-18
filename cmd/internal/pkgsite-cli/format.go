@@ -116,6 +116,20 @@ func formatModule(w io.Writer, r moduleResult) {
 	}
 	fmt.Fprintf(w, "  Has go.mod:       %s\n", yesNo(m.HasGoMod))
 	fmt.Fprintf(w, "  Redistributable:  %s\n", yesNo(m.IsRedistributable))
+	if m.Deprecated {
+		if m.DeprecationReason != "" {
+			fmt.Fprintf(w, "  Deprecated:       yes (%s)\n", m.DeprecationReason)
+		} else {
+			fmt.Fprintf(w, "  Deprecated:       yes\n")
+		}
+	}
+	if m.Retracted {
+		if m.RetractionReason != "" {
+			fmt.Fprintf(w, "  Retracted:        yes (%s)\n", m.RetractionReason)
+		} else {
+			fmt.Fprintf(w, "  Retracted:        yes\n")
+		}
+	}
 
 	if m.Readme != nil {
 		fmt.Fprintln(w)
