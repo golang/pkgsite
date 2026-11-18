@@ -264,12 +264,13 @@ func (s *Server) Install(handle func(string, http.Handler), cacher Cacher, authV
 		api.ServeError(w, r, api.BadRequest("unknown API endpoint",
 			"API endpoints are rooted at /v1/; GET /v1/api at this host and port and read the documentation"))
 	}))
-	handle("GET /v1", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handle("GET /v1", apiRedirect)
+	handle("GET /v1/{$}", apiRedirect)
+	v1betaRedirect := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/v1/api", http.StatusMovedPermanently)
-	}))
-	handle("GET /v1beta", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, "/v1/api", http.StatusMovedPermanently)
-	}))
+	})
+	handle("GET /v1beta", v1betaRedirect)
+	handle("GET /v1beta/{$}", v1betaRedirect)
 	handle("/v1beta/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		u := *r.URL
 		u.Path = strings.Replace(u.Path, "/v1beta/", "/v1/", 1)

@@ -234,49 +234,32 @@ func TestInstallFS(t *testing.T) {
 func TestAPIRedirect(t *testing.T) {
 	_, handler := newTestServer(t, nil)
 
-	t.Run("redirect /api", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		handler.ServeHTTP(w, httptest.NewRequest("GET", "/api", nil))
-		if w.Code != http.StatusFound {
-			t.Errorf("got status code = %d, want %d", w.Code, http.StatusFound)
-		}
-		if got := w.Header().Get("Location"); got != "/v1/api" {
-			t.Errorf("got Location = %q, want %q", got, "/v1/api")
-		}
-	})
-
-	t.Run("redirect /v1beta/ path", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		handler.ServeHTTP(w, httptest.NewRequest("GET", "/v1beta/moo", nil))
-		if w.Code != http.StatusMovedPermanently {
-			t.Errorf("got status code = %d, want %d", w.Code, http.StatusMovedPermanently)
-		}
-		if got := w.Header().Get("Location"); got != "/v1/moo" {
-			t.Errorf("got Location = %q, want %q", got, "/v1/moo")
-		}
-	})
-
-	t.Run("redirect /v1beta/ path with query", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		handler.ServeHTTP(w, httptest.NewRequest("GET", "/v1beta/search?q=uuid&limit=25", nil))
-		if w.Code != http.StatusMovedPermanently {
-			t.Errorf("got status code = %d, want %d", w.Code, http.StatusMovedPermanently)
-		}
-		if got, want := w.Header().Get("Location"), "/v1/search?q=uuid&limit=25"; got != want {
-			t.Errorf("got Location = %q, want %q", got, want)
-		}
-	})
-
-	t.Run("redirect /api/", func(t *testing.T) {
-		w := httptest.NewRecorder()
-		handler.ServeHTTP(w, httptest.NewRequest("GET", "/api/", nil))
-		if w.Code != http.StatusFound {
-			t.Errorf("got status code = %d, want %d", w.Code, http.StatusFound)
-		}
-		if got, want := w.Header().Get("Location"), "/v1/api"; got != want {
-			t.Errorf("got Location = %q, want %q", got, want)
-		}
-	})
+	for _, tc := range []struct {
+		name     string
+		path     string
+		wantCode int
+		wantLoc  string
+	}{
+		{"redirect /api", "/api", http.StatusFound, "/v1/api"},
+		{"redirect /api/", "/api/", http.StatusFound, "/v1/api"},
+		{"redirect /v1", "/v1", http.StatusFound, "/v1/api"},
+		{"redirect /v1/", "/v1/", http.StatusFound, "/v1/api"},
+		{"redirect /v1beta", "/v1beta", http.StatusMovedPermanently, "/v1/api"},
+		{"redirect /v1beta/", "/v1beta/", http.StatusMovedPermanently, "/v1/api"},
+		{"redirect /v1beta/ path", "/v1beta/moo", http.StatusMovedPermanently, "/v1/moo"},
+		{"redirect /v1beta/ path with query", "/v1beta/search?q=uuid&limit=25", http.StatusMovedPermanently, "/v1/search?q=uuid&limit=25"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			w := httptest.NewRecorder()
+			handler.ServeHTTP(w, httptest.NewRequest("GET", tc.path, nil))
+			if w.Code != tc.wantCode {
+				t.Errorf("got status code = %d, want %d", w.Code, tc.wantCode)
+			}
+			if got := w.Header().Get("Location"); got != tc.wantLoc {
+				t.Errorf("got Location = %q, want %q", got, tc.wantLoc)
+			}
+		})
+	}
 }
 
 func TestAPIUnknownEndpoint(t *testing.T) {
@@ -288,6 +271,7 @@ func TestAPIUnknownEndpoint(t *testing.T) {
 		{"GET", "/api/search"},
 		{"GET", "/api/v1/package/foo"},
 		{"POST", "/api/"},
+		{"POST", "/v1/"},
 	} {
 		t.Run(tc.method+" "+tc.path, func(t *testing.T) {
 			w := httptest.NewRecorder()
