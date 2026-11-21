@@ -637,19 +637,34 @@ func (old *namedType) changes(newType syntaxType) iter.Seq2[string, ChangeKind] 
 				return
 			}
 		}
+		// Checking the combined method set (value and pointer methods) handles signature
+		// changes and removed methods, but ignores whether the receiver is a value or a
+		// pointer. Changing a value receiver to a pointer receiver is always a breaking
+		// change, because values of the type no longer implement interfaces or allow calls
+		// on non-addressable values.
+		//
+		// Two subtleties arise when combining signature checks with value-receiver checks:
+		//  1. A value method may both change to a pointer receiver and have a call-compatible
+		//     signature change (e.g., func (T) M(int) -> func (*T) M(int, ...int)).
+		//     old.methods.changes reports ChangeCallCompatible, which must be upgraded to
+		//     ChangeBreaking because the receiver changed from value to pointer.
+		//  2. A value method that is removed (or whose receiver changed
+		//     to a pointer along with a signature change) is already yielded
+		//     by old.methods.changes, and is also absent from newn.valueMethodNames. Tracking
+		//     seenMethods avoids yielding the same method twice (and leaves the second loop to
+		//     handle value-to-pointer receiver changes where the signature is unchanged).
+		seenMethods := map[string]bool{}
 		for k, v := range old.methods.changes(newn.methods) {
+			seenMethods[k] = true
+			if old.valueMethodNames[k] && !newn.valueMethodNames[k] {
+				v = ChangeBreaking
+			}
 			if !yield(k, v) {
 				return
 			}
 		}
-		// Checking the combined method set handles most cases. We also have to ensure
-		// that a value method wasn't changed to a pointer method. It's enough to
-		// show that no value method was removed from the value method set. Given
-		// that the combined method set check showed no breaking changes, the only
-		// other way to remove a value method would be to swap it with a pointer
-		// method, and this check will catch that.
 		for name := range old.valueMethodNames {
-			if !newn.valueMethodNames[name] {
+			if !newn.valueMethodNames[name] && !seenMethods[name] {
 				if !yield(name, ChangeBreaking) {
 					return
 				}

@@ -1010,10 +1010,28 @@ func (t T) unexportedMethod() {}
 			want: map[string]ChangeKind{"M": ChangeBreaking},
 		},
 		{
+			name: "value method to pointer method with call-compatible signature change",
+			old:  parseNamedType(t, "type T int\nfunc (T) M(int) {}", "T"),
+			new:  parseNamedType(t, "type T int\nfunc (*T) M(int, ...string) {}", "T"),
+			want: map[string]ChangeKind{"M": ChangeBreaking},
+		},
+		{
+			name: "value method to pointer method with breaking signature change",
+			old:  parseNamedType(t, "type T int\nfunc (T) M(int) {}", "T"),
+			new:  parseNamedType(t, "type T int\nfunc (*T) M(string) {}", "T"),
+			want: map[string]ChangeKind{"M": ChangeBreaking},
+		},
+		{
 			name: "pointer method to value method",
 			old:  parseNamedType(t, "type T int\nfunc (*T) M() {}", "T"),
 			new:  parseNamedType(t, "type T int\nfunc (T) M() {}", "T"),
 			want: nil,
+		},
+		{
+			name: "pointer method to value method with call-compatible signature change",
+			old:  parseNamedType(t, "type T int\nfunc (*T) M(int) {}", "T"),
+			new:  parseNamedType(t, "type T int\nfunc (T) M(int, ...string) {}", "T"),
+			want: map[string]ChangeKind{"M": ChangeCallCompatible},
 		},
 		{
 			name: "swap pointer and value methods",
@@ -1079,7 +1097,13 @@ func (t T) unexportedMethod() {}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			got := maps.Collect(tc.old.changes(tc.new))
+			got := map[string]ChangeKind{}
+			for k, v := range tc.old.changes(tc.new) {
+				if prev, dup := got[k]; dup {
+					t.Errorf("%s: duplicate change for %q (%v, then %v)", tc.name, k, prev, v)
+				}
+				got[k] = v
+			}
 			if !maps.Equal(got, tc.want) {
 				t.Errorf("%s: changes = %v, want %v", tc.name, got, tc.want)
 			}

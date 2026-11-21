@@ -104,16 +104,21 @@ type I2 interface {
 func (S) M1()    {}
 
 //old
-func (*S) M2()   {}
-func (S) M3()    {}
-func (S) M4(int) {}
+func (*S) M2()    {}
+func (S) M3()     {}
+func (S) M4(int)  {}
+func (S) M5(int)  {}
+func (*S) M6(int) {}
 
 //new
-func (S) M2()  {} // from pointer to value: OK
-func (*S) M3() {} // from value to pointer: breaking change
-func (S) M4()  {} // signature change
+func (S) M2()             {} // from pointer to value: OK
+func (*S) M3()            {} // from value to pointer: breaking change
+func (S) M4()             {} // signature change
+func (*S) M5(int, ...int) {} // value to pointer + cc sig change: breaking
+func (S) M6(int, ...int)  {} // pointer to value + cc sig change: call-compatible
 
-//breaking S.M3 S.M4
+//breaking S.M3 S.M4 S.M5
+//cc S.M6
 
 //old
 func H(*int) {}
