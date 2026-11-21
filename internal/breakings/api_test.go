@@ -740,3 +740,93 @@ package p
 	iType := iNamed.underlying.(*interfaceType)
 	checkDoc(iType.methods.symbols["IM"], "I.IM", "IM is an interface method.")
 }
+
+func TestAPIDoc(t *testing.T) {
+	src := `// Package p doc.
+package p
+
+// Func doc.
+func F() {}
+
+// Const group doc.
+const (
+	// C1 doc.
+	C1 = 1
+)
+
+type embedded struct {
+	// Promoted field doc.
+	Promoted int
+}
+
+// Struct S doc.
+type S struct {
+	embedded
+	// Field X doc.
+	X int
+	// Inline struct doc.
+	Inner struct {
+		// Nested field doc.
+		Nested int
+	}
+}
+
+// Method M doc.
+func (S) M() {}
+
+// Interface I doc.
+type I interface {
+	// Interface method doc.
+	IM()
+}
+
+// Alias A doc.
+type A = struct {
+	// Alias field doc.
+	AF int
+}
+`
+	f, err := parser.ParseFile(token.NewFileSet(), "p.go", src, parser.ParseComments)
+	if err != nil {
+		t.Fatal(err)
+	}
+	api, err := NewAPI("example.com/p", "v1.0.0", []*ast.File{f})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var nilAPI *API
+	if got := nilAPI.Doc("F"); got != "" {
+		t.Errorf("nilAPI.Doc = %q, want empty", got)
+	}
+	if got := (&API{}).Doc("F"); got != "" {
+		t.Errorf("zeroAPI.Doc = %q, want empty", got)
+	}
+
+	tests := []struct {
+		name string
+		want string
+	}{
+		{"", "Package p doc."},
+		{"F", "Func doc."},
+		{"C1", "Const group doc.\nC1 doc."},
+		{"S", "Struct S doc."},
+		{"S.X", "Field X doc."},
+		{"S.Promoted", "Promoted field doc."},
+		{"S.Inner", "Inline struct doc."},
+		{"S.Inner.Nested", "Nested field doc."},
+		{"S.M", "Method M doc."},
+		{"I", "Interface I doc."},
+		{"I.IM", "Interface method doc."},
+		{"A", "Alias A doc."},
+		{"A.AF", "Alias field doc."},
+		{"Missing", ""},
+		{"S.Missing", ""},
+		{"S.Inner.Missing", ""},
+	}
+	for _, tc := range tests {
+		if got := api.Doc(tc.name); got != tc.want {
+			t.Errorf("Doc(%q) = %q, want %q", tc.name, got, tc.want)
+		}
+	}
+}

@@ -288,6 +288,71 @@ func memberDefinition(top, member string, st syntaxType) string {
 	return ""
 }
 
+// Doc returns the documentation comment for the named symbol (e.g. "Foo",
+// "MyStruct.Field", "MyType.Method"), or the package documentation when name
+// is empty. It returns "" if the symbol is not found or has no documentation.
+func (a *API) Doc(name string) string {
+	if a == nil {
+		return ""
+	}
+	if name == "" {
+		return a.packageDoc
+	}
+	if a.symbols == nil {
+		return ""
+	}
+	top, member, hasMember := strings.Cut(name, ".")
+	sym := a.symbols.symbols[top]
+	if sym == nil {
+		return ""
+	}
+	if !hasMember {
+		return sym.doc
+	}
+	if sym.stype == nil {
+		return ""
+	}
+	return memberDoc(sym.stype, member)
+}
+
+func memberDoc(st syntaxType, member string) string {
+	switch t := st.(type) {
+	case *namedType:
+		if t.methods != nil {
+			if m := t.methods.symbols[member]; m != nil {
+				return m.doc
+			}
+		}
+		if t.underlying != nil {
+			return memberDoc(t.underlying, member)
+		}
+	case *structType:
+		if t.selectableFields == nil {
+			return ""
+		}
+		first, rest, ok := strings.Cut(member, ".")
+		f := t.selectableFields.symbols[first]
+		if f == nil {
+			return ""
+		}
+		if !ok {
+			return f.doc
+		}
+		return memberDoc(f.stype, rest)
+	case *interfaceType:
+		if t.methods != nil {
+			if m := t.methods.symbols[member]; m != nil {
+				return m.doc
+			}
+		}
+	case *aliasType:
+		if t.target != nil {
+			return memberDoc(t.target, member)
+		}
+	}
+	return ""
+}
+
 // defs holds all the top-level type and method definitions in a package.
 type defs struct {
 	types   map[string]*ast.TypeSpec   // all top-level types by name
