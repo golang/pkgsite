@@ -536,7 +536,7 @@ func TestUpdate(t *testing.T) {
 
 	memFS := fstest.MapFS{
 		"sub/dir/date=" + yesterday.String() + "/counts-00000-of-00001.csv": &fstest.MapFile{
-			Data: []byte(validHeader + "example.com/a,v1.0.0,10,123,2,45\n"),
+			Data: []byte(validHeader + "example.com/a,,10,123,2,45\n"),
 		},
 	}
 	srv := fakestorage.NewServer("my-bucket", memFS)
